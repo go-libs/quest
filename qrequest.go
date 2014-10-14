@@ -1,8 +1,10 @@
 package quest
 
 import (
-	. "github.com/go-libs/methods"
 	"net/http"
+	"net/url"
+
+	. "github.com/go-libs/methods"
 )
 
 type Qrequest struct {
@@ -11,6 +13,14 @@ type Qrequest struct {
 }
 
 func (r *Qrequest) init() *Qrequest {
+	return r
+}
+
+func (r *Qrequest) Query() *Qrequest {
+	return r
+}
+
+func (r *Qrequest) Parameters() *Qrequest {
 	return r
 }
 
@@ -23,6 +33,14 @@ func (r *Qrequest) Progress() *Qrequest {
 }
 
 func (r *Qrequest) Response() *Qrequest {
+	return r
+}
+
+func (r *Qrequest) ResponseString() *Qrequest {
+	return r
+}
+
+func (r *Qrequest) ResponseJSON() *Qrequest {
 	return r
 }
 
@@ -40,4 +58,8 @@ func encodesParametersInURL(method Method) bool {
 	default:
 		return false
 	}
+}
+
+func escape(s string) string {
+	return url.QueryEscape(s)
 }
