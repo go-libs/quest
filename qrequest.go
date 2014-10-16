@@ -7,11 +7,13 @@ import (
 	. "github.com/go-libs/methods"
 )
 
+type HandlerFunc func(*http.Request, *http.Response, interface{}, error)
+
 type Qrequest struct {
 	Method Method
 	Url    string
 	req    *http.Request
-	res    http.Response
+	res    *http.Response
 }
 
 func (r *Qrequest) Query() *Qrequest {
@@ -30,15 +32,15 @@ func (r *Qrequest) Progress() *Qrequest {
 	return r
 }
 
-func (r *Qrequest) Response() *Qrequest {
+func (r *Qrequest) Response(handler HandlerFunc) *Qrequest {
 	return r
 }
 
-func (r *Qrequest) ResponseString() *Qrequest {
+func (r *Qrequest) ResponseString(handler HandlerFunc) *Qrequest {
 	return r
 }
 
-func (r *Qrequest) ResponseJSON() *Qrequest {
+func (r *Qrequest) ResponseJSON(handler HandlerFunc) *Qrequest {
 	return r
 }
 
