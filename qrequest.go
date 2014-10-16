@@ -8,12 +8,10 @@ import (
 )
 
 type Qrequest struct {
-	req *http.Request
-	res http.Response
-}
-
-func (r *Qrequest) init() *Qrequest {
-	return r
+	Method Method
+	Url    string
+	req    *http.Request
+	res    http.Response
 }
 
 func (r *Qrequest) Query() *Qrequest {

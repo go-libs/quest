@@ -6,7 +6,6 @@ import (
 
 func Request(method Method, url string) *Qrequest {
 	request := &Qrequest{}
-	request.init()
 	return request
 }
 
