@@ -2,10 +2,21 @@ package quest
 
 import (
 	. "github.com/go-libs/methods"
+	stdurl "net/url"
+	"os"
 )
 
 func Request(method Method, url string) *Qrequest {
-	request := &Qrequest{}
+	uri, err := stdurl.ParseRequestURI(url)
+	if err != nil {
+		os.Stderr.WriteString(err.Error())
+		os.Exit(1)
+	}
+	request := &Qrequest{
+		Method: method,
+		Url:    url,
+		Uri:    uri,
+	}
 	return request
 }
 
