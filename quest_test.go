@@ -20,5 +20,10 @@ func TestString(t *testing.T) {
 		fmt.Println(response)
 		fmt.Println(data)
 		fmt.Println(err)
+	}).ResponseJSON(func(request *http.Request, response *http.Response, data interface{}, err error) {
+		fmt.Println(request)
+		fmt.Println(response)
+		fmt.Printf("%+v\n", data)
+		fmt.Println(err)
 	})
 }

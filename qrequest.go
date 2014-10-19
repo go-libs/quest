@@ -1,8 +1,10 @@
 package quest
 
 import (
-	"io"
-	"io/ioutil"
+	"bytes"
+	"encoding/json"
+	//"io"
+	//"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -18,6 +20,9 @@ type Qrequest struct {
 	req    *http.Request
 	res    *http.Response
 	client *http.Client
+
+	isBodyClosed bool
+	Buffer       *bytes.Buffer
 }
 
 func (r *Qrequest) Query() *Qrequest {
@@ -36,7 +41,41 @@ func (r *Qrequest) Progress() *Qrequest {
 	return r
 }
 
-func (r *Qrequest) response() (io.ReadCloser, error) {
+func (r *Qrequest) response() (*bytes.Buffer, error) {
+	if r.isBodyClosed {
+		return r.Buffer, nil
+	}
+	r.isBodyClosed = true
+	return r.Do()
+}
+
+func (r *Qrequest) Response(handler HandlerFunc) *Qrequest {
+	body, err := r.response()
+	handler(r.req, r.res, body.Bytes(), err)
+	return r
+}
+
+func (r *Qrequest) ResponseString(handler HandlerFunc) *Qrequest {
+	body, err := r.response()
+	handler(r.req, r.res, body.String(), err)
+	return r
+}
+
+func (r *Qrequest) ResponseJSON(handler HandlerFunc) *Qrequest {
+	body, err := r.response()
+	var data interface{}
+	err = json.Unmarshal(body.Bytes(), &data)
+	handler(r.req, r.res, data, err)
+	return r
+}
+
+func (r *Qrequest) Validate() *Qrequest {
+	return r
+}
+
+func (r *Qrequest) Cancel() {}
+
+func (r *Qrequest) Do() (*bytes.Buffer, error) {
 	r.req = &http.Request{
 		Method: r.Method.String(),
 		URL:    r.Uri,
@@ -47,35 +86,11 @@ func (r *Qrequest) response() (io.ReadCloser, error) {
 		return nil, err
 	}
 	r.res = res
-	r.Do()
 	defer res.Body.Close()
-	return res.Body, nil
+	r.Buffer = new(bytes.Buffer)
+	r.Buffer.ReadFrom(res.Body)
+	return r.Buffer, nil
 }
-
-func (r *Qrequest) Response(handler HandlerFunc) *Qrequest {
-	body, err := r.response()
-	handler(r.req, r.res, body.(io.ReadCloser), err)
-	return r
-}
-
-func (r *Qrequest) ResponseString(handler HandlerFunc) *Qrequest {
-	body, err := r.response()
-	data, err := ioutil.ReadAll(body)
-	handler(r.req, r.res, string(data), err)
-	return r
-}
-
-func (r *Qrequest) ResponseJSON(handler HandlerFunc) *Qrequest {
-	return r
-}
-
-func (r *Qrequest) Validate() *Qrequest {
-	return r
-}
-
-func (r *Qrequest) Cancel() {}
-
-func (r *Qrequest) Do() {}
 
 // Helpers:
 func encodesParametersInURL(method Method) bool {
