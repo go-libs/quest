@@ -13,6 +13,7 @@ import (
 
 type JSONMaps map[string]interface{}
 
+type HandlerFunc func(*http.Request, *http.Response, interface{}, error)
 type BytesHandlerFunc func(*http.Request, *http.Response, []byte, error)
 type StringHandlerFunc func(*http.Request, *http.Response, string, error)
 type JSONHandlerFunc func(*http.Request, *http.Response, JSONMaps, error)
@@ -53,7 +54,13 @@ func (r *Qrequest) response() (*bytes.Buffer, error) {
 	return r.Do()
 }
 
-func (r *Qrequest) Response(handler BytesHandlerFunc) *Qrequest {
+func (r *Qrequest) Response(handler HandlerFunc) *Qrequest {
+	body, err := r.response()
+	handler(r.req, r.res, body, err)
+	return r
+}
+
+func (r *Qrequest) ResponseBytes(handler BytesHandlerFunc) *Qrequest {
 	body, err := r.response()
 	handler(r.req, r.res, body.Bytes(), err)
 	return r
@@ -67,9 +74,13 @@ func (r *Qrequest) ResponseString(handler StringHandlerFunc) *Qrequest {
 
 func (r *Qrequest) ResponseJSON(handler JSONHandlerFunc) *Qrequest {
 	body, err := r.response()
-	data := JSONMaps{}
-	err = json.Unmarshal(body.Bytes(), &data)
-	handler(r.req, r.res, data, err)
+	if err != nil {
+		handler(r.req, r.res, nil, err)
+	} else {
+		data := JSONMaps{}
+		err = json.Unmarshal(body.Bytes(), &data)
+		handler(r.req, r.res, data, err)
+	}
 	return r
 }
 
