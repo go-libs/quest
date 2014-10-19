@@ -11,7 +11,11 @@ import (
 	. "github.com/go-libs/methods"
 )
 
-type HandlerFunc func(*http.Request, *http.Response, interface{}, error)
+type JSONMaps map[string]interface{}
+
+type BytesHandlerFunc func(*http.Request, *http.Response, []byte, error)
+type StringHandlerFunc func(*http.Request, *http.Response, string, error)
+type JSONHandlerFunc func(*http.Request, *http.Response, JSONMaps, error)
 
 type Qrequest struct {
 	Method Method
@@ -49,21 +53,21 @@ func (r *Qrequest) response() (*bytes.Buffer, error) {
 	return r.Do()
 }
 
-func (r *Qrequest) Response(handler HandlerFunc) *Qrequest {
+func (r *Qrequest) Response(handler BytesHandlerFunc) *Qrequest {
 	body, err := r.response()
 	handler(r.req, r.res, body.Bytes(), err)
 	return r
 }
 
-func (r *Qrequest) ResponseString(handler HandlerFunc) *Qrequest {
+func (r *Qrequest) ResponseString(handler StringHandlerFunc) *Qrequest {
 	body, err := r.response()
 	handler(r.req, r.res, body.String(), err)
 	return r
 }
 
-func (r *Qrequest) ResponseJSON(handler HandlerFunc) *Qrequest {
+func (r *Qrequest) ResponseJSON(handler JSONHandlerFunc) *Qrequest {
 	body, err := r.response()
-	var data interface{}
+	data := JSONMaps{}
 	err = json.Unmarshal(body.Bytes(), &data)
 	handler(r.req, r.res, data, err)
 	return r
