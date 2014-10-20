@@ -88,6 +88,10 @@ func (r *Qrequest) Validate() *Qrequest {
 	return r
 }
 
+func (r *Qrequest) ValidateStatusCode() *Qrequest {
+	return r
+}
+
 func (r *Qrequest) Cancel() {}
 
 func (r *Qrequest) Do() (*bytes.Buffer, error) {
