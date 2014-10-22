@@ -3,8 +3,11 @@ package quest
 import (
 	"bytes"
 	"encoding/json"
+	"strconv"
+
 	//"io"
 	//"io/ioutil"
+	"errors"
 	"net/http"
 	"net/url"
 
@@ -28,6 +31,8 @@ type Qrequest struct {
 
 	isBodyClosed bool
 	Buffer       *bytes.Buffer
+
+	err error
 }
 
 func (r *Qrequest) Query() *Qrequest {
@@ -47,6 +52,9 @@ func (r *Qrequest) Progress() *Qrequest {
 }
 
 func (r *Qrequest) response() (*bytes.Buffer, error) {
+	if r.err != nil {
+		return r.Buffer, r.err
+	}
 	if r.isBodyClosed {
 		return r.Buffer, nil
 	}
@@ -88,7 +96,26 @@ func (r *Qrequest) Validate() *Qrequest {
 	return r
 }
 
-func (r *Qrequest) ValidateStatusCode() *Qrequest {
+func (r *Qrequest) validateStatusCode(statusCodes ...int) bool {
+	statusCode := r.res.StatusCode
+	if len(statusCodes) > 0 {
+		for _, c := range statusCodes {
+			if statusCode == c {
+				return true
+			}
+		}
+		// 200 <= x < 300
+	} else if statusCode >= 200 && statusCode < 300 {
+		return true
+	}
+	return false
+}
+
+func (r *Qrequest) ValidateStatusCode(statusCodes ...int) *Qrequest {
+	r.response()
+	if !r.validateStatusCode(statusCodes...) {
+		r.err = errors.New("http: invalid status code " + strconv.Itoa(r.res.StatusCode))
+	}
 	return r
 }
 
