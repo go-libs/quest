@@ -96,6 +96,15 @@ func (r *Qrequest) Validate() *Qrequest {
 	return r
 }
 
+func (r *Qrequest) validateAcceptContentType(map[string]string) bool {
+	return true
+}
+
+// Acceptable Content Type
+func (r *Qrequest) ValidateAcceptContentType(map[string]string) bool {
+	return true
+}
+
 func (r *Qrequest) validateStatusCode(statusCodes ...int) bool {
 	statusCode := r.res.StatusCode
 	if len(statusCodes) > 0 {
@@ -111,6 +120,7 @@ func (r *Qrequest) validateStatusCode(statusCodes ...int) bool {
 	return false
 }
 
+// Status Code
 func (r *Qrequest) ValidateStatusCode(statusCodes ...int) *Qrequest {
 	r.response()
 	if !r.validateStatusCode(statusCodes...) {
