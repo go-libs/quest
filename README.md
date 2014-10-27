@@ -10,7 +10,8 @@ Elegant HTTP Networking in Go.
 
 ```go
 import "github.com/go-libs/quest"
+import . "github.com/go-libs/methods"
 
-quest.Request(quest.GET, "http://httpbin.org/get")
+quest.Request(GET, "http://httpbin.org/get")
 ```
 
