@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"strconv"
+	"strings"
 
-	//"io"
-	//"io/ioutil"
 	"errors"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -29,17 +30,85 @@ type Qrequest struct {
 	res    *http.Response
 	client *http.Client
 
+	// request header & body
+	Header http.Header
+	Body   io.ReadCloser
+	Length int64
+
 	isBodyClosed bool
 	Buffer       *bytes.Buffer
 
 	err error
 }
 
-func (r *Qrequest) Query() *Qrequest {
+func (r *Qrequest) Query(data interface{}) *Qrequest {
+	var queryString string
+	switch t := data.(type) {
+	case url.Values:
+		queryString = t.Encode()
+		break
+	case string:
+		queryString = t
+		break
+	case []byte:
+		queryString = string(t)
+		break
+	}
+	r.Uri.RawQuery = queryString
 	return r
 }
 
-func (r *Qrequest) Parameters() *Qrequest {
+func (r *Qrequest) Parameters(data interface{}) *Qrequest {
+	if encodesParametersInURL(r.Method) {
+		return r
+	}
+	var (
+		body   io.ReadCloser
+		length int64
+	)
+	switch t := data.(type) {
+	case url.Values:
+		body, length = packBodyByString(t.Encode())
+		break
+	case string:
+		body, length = packBodyByString(t)
+		break
+	case []byte:
+		body, length = packBodyByBytes(t)
+		break
+	case *bytes.Buffer:
+		body, length = packBodyByBytesBuffer(t)
+		break
+	case *bytes.Reader:
+		body, length = packBodyByBytesReader(t)
+		break
+	case *strings.Reader:
+		body, length = packBodyByStringsReader(t)
+		break
+		// JSON Object
+	default:
+		b, err := json.Marshal(data)
+		if err != nil {
+			r.err = err
+			return r
+		}
+		body, length = packBodyByBytes(b)
+	}
+	if body != nil {
+		r.Body = body
+		r.Length = length
+	}
+	return r
+}
+
+func (r *Qrequest) Encoding(t string) *Qrequest {
+	t = strings.ToUpper(t)
+	if t == "JSON" {
+		t = "application/json"
+	}
+	if t != "" {
+		r.Header.Set("Content-Type", t)
+	}
 	return r
 }
 
@@ -135,6 +204,14 @@ func (r *Qrequest) Do() (*bytes.Buffer, error) {
 	r.req = &http.Request{
 		Method: r.Method.String(),
 		URL:    r.Uri,
+		Header: r.Header,
+	}
+	if r.req.Header.Get("Content-Type") == "" {
+		r.req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
+	if r.Body != nil {
+		r.req.Body = r.Body
+		r.req.ContentLength = r.Length
 	}
 	r.client = &http.Client{}
 	res, err := r.client.Do(r.req)
@@ -149,6 +226,27 @@ func (r *Qrequest) Do() (*bytes.Buffer, error) {
 }
 
 // Helpers:
+
+func packBodyByString(s string) (io.ReadCloser, int64) {
+	return ioutil.NopCloser(bytes.NewBufferString(s)), int64(len(s))
+}
+
+func packBodyByBytes(b []byte) (io.ReadCloser, int64) {
+	return ioutil.NopCloser(bytes.NewBuffer(b)), int64(len(b))
+}
+
+func packBodyByBytesBuffer(b *bytes.Buffer) (io.ReadCloser, int64) {
+	return ioutil.NopCloser(b), int64(b.Len())
+}
+
+func packBodyByBytesReader(b *bytes.Reader) (io.ReadCloser, int64) {
+	return ioutil.NopCloser(b), int64(b.Len())
+}
+
+func packBodyByStringsReader(b *strings.Reader) (io.ReadCloser, int64) {
+	return ioutil.NopCloser(b), int64(b.Len())
+}
+
 func encodesParametersInURL(method Method) bool {
 	switch method {
 	case GET, HEAD, DELETE:

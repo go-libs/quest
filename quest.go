@@ -1,9 +1,11 @@
 package quest
 
 import (
-	. "github.com/go-libs/methods"
+	"net/http"
 	stdurl "net/url"
 	"os"
+
+	. "github.com/go-libs/methods"
 )
 
 func Request(method Method, url string) *Qrequest {
@@ -16,6 +18,7 @@ func Request(method Method, url string) *Qrequest {
 		Method: method,
 		Url:    url,
 		Uri:    uri,
+		Header: make(http.Header),
 	}
 	return request
 }
