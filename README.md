@@ -20,9 +20,9 @@ quest.Request(GET, "http://httpbin.org/get")
 
 ```go
 quest.Request(GET, "http://httpbin.org/get").
-  Response(func(request *http.Request, response *http.Response, data interface{}, err error) {
-  fmt.Println(request)
-  fmt.Println(response)
+  Response(func(req *http.Request, res *http.Response, data interface{}, e error) {
+  fmt.Println(req)
+  fmt.Println(res)
   fmt.Println(data)
   fmt.Println(err)
 })
@@ -56,10 +56,10 @@ type OtherDataStruct struct {
 quest.Request(POST, "http://httpbin.org/post").
   Encoding("JSON").
   Parameters(&parameters).
-  ResponseJSON(func(request *http.Request, response *http.Response, data *DataStruct, err error) {
+  ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct, e error) {
   fmt.Println(data)
 })
-  ResponseJSON(func(request *http.Request, response *http.Response, data OtherDataStruct, err error) {
+  ResponseJSON(func(req *http.Request, res *http.Response, data OtherDataStruct, e error) {
   fmt.Println(data)
 })
 ```
