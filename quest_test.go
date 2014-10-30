@@ -1,6 +1,7 @@
 package quest
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -26,7 +27,7 @@ func TestResponseHandling(t *testing.T) {
 
 	Request(GET, "http://httpbin.org/get").
 		Query(&queryParams).
-		Response(func(request *http.Request, response *http.Response, data interface{}, err error) {
+		Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
 		fmt.Println(request)
 		fmt.Println(response)
 		fmt.Println(data)
@@ -35,7 +36,7 @@ func TestResponseHandling(t *testing.T) {
 
 	Request(POST, "http://httpbin.org/post").
 		Parameters(queryParams).
-		Response(func(request *http.Request, response *http.Response, data interface{}, err error) {
+		Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
 		fmt.Println(request)
 		fmt.Println(response)
 		fmt.Println(data)

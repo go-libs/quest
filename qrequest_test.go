@@ -1,6 +1,7 @@
 package quest
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"testing"
@@ -13,7 +14,7 @@ type JSONMaps map[string]interface{}
 func TestString(t *testing.T) {
 	Request(GET, "http://httpbin.org/get").
 		ValidateStatusCode().
-		Response(func(request *http.Request, response *http.Response, data interface{}, err error) {
+		Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
 		fmt.Println("Response")
 		fmt.Println(request)
 		fmt.Println(response)

@@ -20,7 +20,7 @@ quest.Request(GET, "http://httpbin.org/get")
 
 ```go
 quest.Request(GET, "http://httpbin.org/get").
-  Response(func(req *http.Request, res *http.Response, data interface{}, e error) {
+  Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, e error) {
   fmt.Println(req)
   fmt.Println(res)
   fmt.Println(data)
@@ -33,7 +33,7 @@ quest.Request(GET, "http://httpbin.org/get").
 
 Built-in Response Methods
 
-* `Response(func(*http.Request, *http.Response, interface{}, error))`
+* `Response(func(*http.Request, *http.Response, *bytes.Buffer, error))`
 * `ResponseBytes(func(*http.Request, *http.Response, []byte, error))`
 * `ResponseString(func(*http.Request, *http.Response, string, error))`
 * `ResponseJSON(f interface{})`, `f` ___Must___ be `func`
