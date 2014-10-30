@@ -130,20 +130,20 @@ func (r *Qrequest) response() (*bytes.Buffer, error) {
 }
 
 func (r *Qrequest) Response(handler HandlerFunc) *Qrequest {
-	body, err := r.response()
-	handler(r.req, r.res, body, err)
+	_, err := r.response()
+	handler(r.req, r.res, r.Buffer, err)
 	return r
 }
 
 func (r *Qrequest) ResponseBytes(handler BytesHandlerFunc) *Qrequest {
-	body, err := r.response()
-	handler(r.req, r.res, body.Bytes(), err)
+	_, err := r.response()
+	handler(r.req, r.res, r.Buffer.Bytes(), err)
 	return r
 }
 
 func (r *Qrequest) ResponseString(handler StringHandlerFunc) *Qrequest {
-	body, err := r.response()
-	handler(r.req, r.res, body.String(), err)
+	_, err := r.response()
+	handler(r.req, r.res, r.Buffer.String(), err)
 	return r
 }
 
@@ -154,14 +154,13 @@ func (r *Qrequest) ResponseJSON(f interface{}) *Qrequest {
 		argsNum               = t.NumIn()
 		in                    = make([]reflect.Value, argsNum) //Panic if t is not kind of Func
 		reqV, resV, dataV, eV reflect.Value
-		body                  *bytes.Buffer
 		err                   error
 	)
 	if argsNum != 4 {
 		err = errors.New("ResponseJSON: invalid arguments.")
 		return r
 	} else {
-		body, err = r.response()
+		_, err = r.response()
 		if err != nil {
 			dataV = reflect.New(t.In(2)).Elem()
 		} else {
@@ -172,7 +171,7 @@ func (r *Qrequest) ResponseJSON(f interface{}) *Qrequest {
 			}
 			dataN := reflect.New(dataT)
 			data := dataN.Interface()
-			err = json.Unmarshal(body.Bytes(), &data)
+			err = json.Unmarshal(r.Buffer.Bytes(), &data)
 			dataV = reflect.ValueOf(data)
 			if dataK != reflect.Ptr {
 				dataV = reflect.Indirect(dataV)
