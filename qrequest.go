@@ -3,6 +3,7 @@ package quest
 import (
 	"bytes"
 	"encoding/json"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -15,12 +16,9 @@ import (
 	. "github.com/go-libs/methods"
 )
 
-type JSONMaps map[string]interface{}
-
 type HandlerFunc func(*http.Request, *http.Response, interface{}, error)
 type BytesHandlerFunc func(*http.Request, *http.Response, []byte, error)
 type StringHandlerFunc func(*http.Request, *http.Response, string, error)
-type JSONHandlerFunc func(*http.Request, *http.Response, JSONMaps, error)
 
 type Qrequest struct {
 	Method Method
@@ -44,14 +42,14 @@ type Qrequest struct {
 func (r *Qrequest) Query(data interface{}) *Qrequest {
 	var queryString string
 	switch t := data.(type) {
-	case url.Values:
-		queryString = t.Encode()
-		break
 	case string:
 		queryString = t
 		break
 	case []byte:
 		queryString = string(t)
+		break
+	case *url.Values:
+		queryString = t.Encode()
 		break
 	}
 	r.Uri.RawQuery = queryString
@@ -67,14 +65,14 @@ func (r *Qrequest) Parameters(data interface{}) *Qrequest {
 		length int64
 	)
 	switch t := data.(type) {
-	case url.Values:
-		body, length = packBodyByString(t.Encode())
-		break
 	case string:
 		body, length = packBodyByString(t)
 		break
 	case []byte:
 		body, length = packBodyByBytes(t)
+		break
+	case *url.Values:
+		body, length = packBodyByString(t.Encode())
 		break
 	case *bytes.Buffer:
 		body, length = packBodyByBytesBuffer(t)
@@ -149,15 +147,50 @@ func (r *Qrequest) ResponseString(handler StringHandlerFunc) *Qrequest {
 	return r
 }
 
-func (r *Qrequest) ResponseJSON(handler JSONHandlerFunc) *Qrequest {
-	body, err := r.response()
-	if err != nil {
-		handler(r.req, r.res, nil, err)
+func (r *Qrequest) ResponseJSON(f interface{}) *Qrequest {
+	var (
+		fn                    = reflect.ValueOf(f)
+		t                     = reflect.TypeOf(f)
+		argsNum               = t.NumIn()
+		in                    = make([]reflect.Value, argsNum) //Panic if t is not kind of Func
+		reqV, resV, dataV, eV reflect.Value
+		body                  *bytes.Buffer
+		err                   error
+	)
+	if argsNum != 4 {
+		err = errors.New("ResponseJSON: invalid arguments.")
+		return r
 	} else {
-		data := JSONMaps{}
-		err = json.Unmarshal(body.Bytes(), &data)
-		handler(r.req, r.res, data, err)
+		body, err = r.response()
+		if err != nil {
+			dataV = reflect.New(t.In(2)).Elem()
+		} else {
+			dataT := t.In(2)
+			dataK := dataT.Kind()
+			if dataK == reflect.Ptr {
+				dataT = dataT.Elem()
+			}
+			dataN := reflect.New(dataT)
+			data := dataN.Interface()
+			err = json.Unmarshal(body.Bytes(), &data)
+			dataV = reflect.ValueOf(data)
+			if dataK != reflect.Ptr {
+				dataV = reflect.Indirect(dataV)
+			}
+		}
 	}
+	if err == nil {
+		eV = reflect.New(t.In(3)).Elem()
+	} else {
+		eV = reflect.ValueOf(err)
+	}
+	reqV = reflect.ValueOf(r.req)
+	resV = reflect.ValueOf(r.res)
+	in[0] = reqV
+	in[1] = resV
+	in[2] = dataV
+	in[3] = eV
+	fn.Call(in)
 	return r
 }
 
@@ -206,10 +239,10 @@ func (r *Qrequest) Do() (*bytes.Buffer, error) {
 		URL:    r.Uri,
 		Header: r.Header,
 	}
-	if r.req.Header.Get("Content-Type") == "" {
-		r.req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	}
-	if r.Body != nil {
+	if r.Length > 0 && r.Body != nil {
+		if r.req.Header.Get("Content-Type") == "" {
+			r.req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		}
 		r.req.Body = r.Body
 		r.req.ContentLength = r.Length
 	}
@@ -218,8 +251,8 @@ func (r *Qrequest) Do() (*bytes.Buffer, error) {
 	if err != nil {
 		return nil, err
 	}
-	r.res = res
 	defer res.Body.Close()
+	r.res = res
 	r.Buffer = new(bytes.Buffer)
 	r.Buffer.ReadFrom(res.Body)
 	return r.Buffer, nil

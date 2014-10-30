@@ -8,6 +8,8 @@ import (
 	. "github.com/go-libs/methods"
 )
 
+type JSONMaps map[string]interface{}
+
 func TestString(t *testing.T) {
 	Request(GET, "http://httpbin.org/get").
 		ValidateStatusCode().
@@ -33,6 +35,7 @@ func TestString(t *testing.T) {
 		fmt.Println("ResponseJSON")
 		fmt.Println(request)
 		fmt.Println(response)
+		fmt.Println(data)
 		fmt.Printf("%+v\n", data)
 		fmt.Printf("%+v\n", data["headers"])
 		fmt.Println(err)

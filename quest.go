@@ -18,7 +18,7 @@ func Request(method Method, url string) *Qrequest {
 		Method: method,
 		Url:    url,
 		Uri:    uri,
-		Header: make(http.Header),
+		Header: http.Header{},
 	}
 	return request
 }
