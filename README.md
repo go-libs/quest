@@ -33,10 +33,10 @@ quest.Request(GET, "http://httpbin.org/get").
 
 Built-in Response Methods
 
-* `Response(*http.Request, *http.Response, interface{}, error)`
-* `ResponseBytes(*http.Request, *http.Response, []byte, error)`
-* `ResponseString(*http.Request, *http.Response, string, error)`
-* `ResponseJSON(f interface{})` ___Must be `func`___
+* `Response(func(*http.Request, *http.Response, interface{}, error))`
+* `ResponseBytes(func(*http.Request, *http.Response, []byte, error))`
+* `ResponseString(func(*http.Request, *http.Response, string, error))`
+* `ResponseJSON(f interface{})`, `f` ___Must___ be `func`
     - `func(req *http.Request, res *http.Response, data *JSONStruct, e error)`
     - `func(req *http.Request, res *http.Response, data JSONStruct, e error)`
 
