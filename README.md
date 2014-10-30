@@ -29,6 +29,60 @@ quest.Request(GET, "http://httpbin.org/get").
 ```
 
 
+### Response Serialization
+
+Built-in Response Methods
+
+* `Response(*http.Request, *http.Response, interface{}, error)`
+* `ResponseBytes(*http.Request, *http.Response, []byte, error)`
+* `ResponseString(*http.Request, *http.Response, string, error)`
+* `ResponseJSON(f interface{})`
+
+
+#### Response String Handler
+
+```go
+quest.Request(GET, "http://httpbin.org/get").
+  ResponseString(func(req *http.Request, res *http.Response, data string, e error) {
+  fmt.Println(data)
+})
+```
+
+
+#### Response JSON Handler
+
+```go
+type DataStruct struct {
+  Headers map[string]string
+  Origin  string
+}
+
+quest.Request(GET, "http://httpbin.org/get").
+  ResponseJSON(func(req *http.Request, res *http.Response, data DataStruct, e error) {
+  fmt.Println(data)
+})
+
+quest.Request(GET, "http://httpbin.org/get").
+  ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct, e error) {
+  fmt.Println(data)
+})
+```
+
+
+#### Chained Response Handlers
+
+Response handlers can even be chained:
+```go
+quest.Request(GET, "http://httpbin.org/get").
+  ResponseString(func(req *http.Request, res *http.Response, data string, e error) {
+  fmt.Println(data)
+}).
+  ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct, e error) {
+  fmt.Println(data)
+})
+```
+
+
 ### POST Request with JSON-encoded Parameters
 
 ```go
