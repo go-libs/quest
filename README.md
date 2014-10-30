@@ -36,7 +36,10 @@ Built-in Response Methods
 * `Response(*http.Request, *http.Response, interface{}, error)`
 * `ResponseBytes(*http.Request, *http.Response, []byte, error)`
 * `ResponseString(*http.Request, *http.Response, string, error)`
-* `ResponseJSON(f interface{})` ___Must Be___ `func(req *http.Request, res *http.Response, data *JSONStruct, e error)` or `func(req *http.Request, res *http.Response, data JSONStruct, e error)`
+* `ResponseJSON(f interface{})` ___Must Be A Func___
+
+    - `func(req *http.Request, res *http.Response, data *JSONStruct, e error)`
+    - `func(req *http.Request, res *http.Response, data JSONStruct, e error)`
 
 
 #### Response String Handler
