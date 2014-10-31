@@ -102,4 +102,13 @@ func TestResponseHandling(t *testing.T) {
 		fmt.Println(data)
 		fmt.Println(data.Json)
 	})
+
+	type Options struct {
+		Foo string `url:"foo"`
+		Baz []int  `url:"baz"`
+	}
+
+	fmt.Println(Request(GET, "http://httpbin.org/get").
+		Query(Options{"bar", []int{233, 377, 610}}))
+	// http://httpbin.org/get?foo=bar
 }

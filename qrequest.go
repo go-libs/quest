@@ -14,6 +14,7 @@ import (
 	"net/url"
 
 	. "github.com/go-libs/methods"
+	goquery "github.com/google/go-querystring/query"
 )
 
 type HandlerFunc func(*http.Request, *http.Response, *bytes.Buffer, error)
@@ -51,6 +52,9 @@ func (r *Qrequest) Query(data interface{}) *Qrequest {
 	case *url.Values:
 		queryString = t.Encode()
 		break
+	default:
+		qs, _ := goquery.Values(t)
+		queryString = qs.Encode()
 	}
 	r.Uri.RawQuery = queryString
 	return r
@@ -286,8 +290,4 @@ func encodesParametersInURL(method Method) bool {
 	default:
 		return false
 	}
-}
-
-func escape(s string) string {
-	return url.QueryEscape(s)
 }

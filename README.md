@@ -2,6 +2,8 @@
 
 Elegant HTTP Networking in Go.
 
+__[Docs]()__
+
 
 ## Usage
 
@@ -85,6 +87,26 @@ quest.Request(GET, "http://httpbin.org/get").
 ```
 
 
+### HTTP Methods
+
+```go
+import . "github.com/go-libs/methods"
+```
+
+
+### Query String
+
+```go
+type Options struct {
+  Foo string `url:"foo"`
+}
+
+quest.Request(GET, "http://httpbin.org/get").
+  Query(Options{"bar"})
+// http://httpbin.org/get?foo=bar
+```
+
+
 ### POST Request with JSON-encoded Parameters
 
 ```go
@@ -119,3 +141,6 @@ quest.Request(POST, "http://httpbin.org/post").
   fmt.Println(data)
 })
 ```
+
+
+[Docs]: http://godoc.org/github.com/go-libs/quest
