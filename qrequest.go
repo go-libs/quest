@@ -83,7 +83,7 @@ func (r *Qrequest) Parameters(data interface{}) *Qrequest {
 	case *strings.Reader:
 		body, length = packBodyByStringsReader(t)
 		break
-		// JSON Object
+	// JSON Object
 	default:
 		b, err := json.Marshal(data)
 		if err != nil {
