@@ -23,7 +23,9 @@ func Request(method Method, url string) *Qrequest {
 	return request
 }
 
-func Upload() {}
+func Upload(method Method, url string) *Qrequest {
+	return Request(method, url)
+}
 
 func Download(method Method, url string) *Qrequest {
 	return Request(method, url)

@@ -108,7 +108,7 @@ func TestResponseHandling(t *testing.T) {
 		Baz []int  `url:"baz"`
 	}
 
+	// http://httpbin.org/get http://httpbin.org/get?baz=233&baz=377&baz=610&foo=bar
 	fmt.Println(Request(GET, "http://httpbin.org/get").
 		Query(Options{"bar", []int{233, 377, 610}}))
-	// http://httpbin.org/get?foo=bar
 }
