@@ -92,7 +92,7 @@ func (r *Qrequest) Parameters(data interface{}) *Qrequest {
 		}
 		body, length = packBodyByBytes(b)
 	}
-	if body != nil {
+	if length > 0 && body != nil {
 		r.Body = body
 		r.Length = length
 	}
