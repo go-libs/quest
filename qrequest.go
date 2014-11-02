@@ -118,7 +118,7 @@ func (r *Qrequest) Authenticate(username, password string) *Qrequest {
 	return r
 }
 
-func (r *Qrequest) Progress() *Qrequest {
+func (r *Qrequest) Progress(f func(current, total, expected int64)) *Qrequest {
 	return r
 }
 
