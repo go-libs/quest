@@ -143,4 +143,8 @@ quest.Request(POST, "http://httpbin.org/post").
 ```
 
 
+## License
+
+MIT
+
 [Docs]: http://godoc.org/github.com/go-libs/quest
