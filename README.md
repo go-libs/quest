@@ -102,7 +102,7 @@ type Options struct {
 }
 
 quest.Request(GET, "http://httpbin.org/get").
-  Query(Options{"bar"})
+  QueryParameters(Options{"bar"})
 // http://httpbin.org/get?foo=bar
 ```
 

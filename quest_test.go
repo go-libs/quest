@@ -26,7 +26,7 @@ func TestResponseHandling(t *testing.T) {
 	queryParams.Set("name", "活力")
 
 	Request(GET, "http://httpbin.org/get").
-		Query(&queryParams).
+		QueryParameters(&queryParams).
 		Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
 		fmt.Println(request)
 		fmt.Println(response)
@@ -110,5 +110,5 @@ func TestResponseHandling(t *testing.T) {
 
 	// http://httpbin.org/get http://httpbin.org/get?baz=233&baz=377&baz=610&foo=bar
 	fmt.Println(Request(GET, "http://httpbin.org/get").
-		Query(Options{"bar", []int{233, 377, 610}}))
+		QueryParameters(Options{"bar", []int{233, 377, 610}}))
 }

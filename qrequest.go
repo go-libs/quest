@@ -40,7 +40,7 @@ type Qrequest struct {
 	err error
 }
 
-func (r *Qrequest) Query(data interface{}) *Qrequest {
+func (r *Qrequest) QueryParameters(data interface{}) *Qrequest {
 	var queryString string
 	switch t := data.(type) {
 	case string:
