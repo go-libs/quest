@@ -22,12 +22,12 @@ type BytesHandlerFunc func(*http.Request, *http.Response, []byte, error)
 type StringHandlerFunc func(*http.Request, *http.Response, string, error)
 
 type Qrequest struct {
-	Method Method
-	Url    string
-	Uri    *url.URL
-	req    *http.Request
-	res    *http.Response
-	client *http.Client
+	Method   Method
+	Endpoint string
+	Url      *url.URL
+	req      *http.Request
+	res      *http.Response
+	client   *http.Client
 
 	// request header & body
 	Header http.Header
@@ -56,7 +56,7 @@ func (r *Qrequest) Query(data interface{}) *Qrequest {
 		qs, _ := goquery.Values(t)
 		queryString = qs.Encode()
 	}
-	r.Uri.RawQuery = queryString
+	r.Url.RawQuery = queryString
 	return r
 }
 
@@ -239,7 +239,7 @@ func (r *Qrequest) Cancel() {}
 func (r *Qrequest) Do() (*bytes.Buffer, error) {
 	r.req = &http.Request{
 		Method: r.Method.String(),
-		URL:    r.Uri,
+		URL:    r.Url,
 		Header: r.Header,
 	}
 	if r.Length > 0 && r.Body != nil {
