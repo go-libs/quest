@@ -9,6 +9,7 @@ type ProgressBar struct {
 
 func (p *ProgressBar) Write(b []byte) (int, error) {
 	current := len(b)
+	// Response ContentLength
 	if p.Total != -1 {
 		p.Current += int64(current)
 		p.Progress(p.Current, p.Total, p.Total-p.Current)
