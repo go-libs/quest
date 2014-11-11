@@ -161,7 +161,7 @@ quest.Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log").Progress(
   fmt.Println(bytesRead, totalBytesRead, totalBytesExpectedToRead)
 }).Do()
 
-questDownload(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log").Progress(func(current, total, expected int64) {
+quest.Download(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log").Progress(func(current, total, expected int64) {
   fmt.Println(current, total, expected)
 }).Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
   fmt.Println(request)
