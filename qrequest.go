@@ -3,6 +3,8 @@ package quest
 import (
 	"bytes"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -38,6 +40,11 @@ type Qrequest struct {
 	Buffer       *bytes.Buffer
 
 	err error
+
+	Destination string
+	isDownload  bool
+
+	DataProgress func(current, total, expected int64)
 }
 
 func (r *Qrequest) QueryParameters(data interface{}) *Qrequest {
@@ -119,6 +126,7 @@ func (r *Qrequest) Authenticate(username, password string) *Qrequest {
 }
 
 func (r *Qrequest) Progress(f func(current, total, expected int64)) *Qrequest {
+	r.DataProgress = f
 	return r
 }
 
@@ -255,9 +263,35 @@ func (r *Qrequest) Do() (*bytes.Buffer, error) {
 		return nil, err
 	}
 	defer res.Body.Close()
+
 	r.res = res
 	r.Buffer = new(bytes.Buffer)
-	r.Buffer.ReadFrom(res.Body)
+	pb := &ProgressBar{
+		Qreq:     r,
+		Total:    res.ContentLength,
+		Progress: r.DataProgress,
+	}
+	w := io.MultiWriter(r.Buffer, pb)
+
+	if r.isDownload {
+		p, err := filepath.Abs(r.Destination)
+		if err != nil {
+			return nil, err
+		}
+		f, err := os.Create(p)
+		if err != nil {
+			return nil, err
+		}
+		w = io.MultiWriter(w, f)
+		defer f.Close()
+		if err != nil {
+			return nil, err
+		}
+	}
+	_, err = io.Copy(w, res.Body)
+	if err != nil {
+		return nil, err
+	}
 	return r.Buffer, nil
 }
 

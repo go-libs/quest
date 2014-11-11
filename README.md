@@ -143,6 +143,36 @@ quest.Request(POST, "http://httpbin.org/post").
 ```
 
 
+
+### Downloading
+
+
+#### Downloading a File
+
+```go
+quest.Download(GET, "http://httpbin.org/stream/100", "stream.log").Do()
+```
+
+
+#### Downloading a File w/Progress
+
+```go
+quest.Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log").Progress(func(bytesRead, totalBytesRead, totalBytesExpectedToRead int64) {
+  fmt.Println(bytesRead, totalBytesRead, totalBytesExpectedToRead)
+}).Do()
+
+questDownload(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log").Progress(func(current, total, expected int64) {
+  fmt.Println(current, total, expected)
+}).Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
+  fmt.Println(request)
+  fmt.Println(response)
+  fmt.Println(data.Len())
+  fmt.Println(err)
+})
+```
+
+
+
 ## License
 
 MIT

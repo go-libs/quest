@@ -112,3 +112,17 @@ func TestResponseHandling(t *testing.T) {
 	fmt.Println(Request(GET, "http://httpbin.org/get").
 		QueryParameters(Options{"bar", []int{233, 377, 610}}))
 }
+
+func TestDownload(t *testing.T) {
+	Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log").Progress(func(current, total, expected int64) {
+		fmt.Println("stream ", current, total, expected)
+	}).Do()
+	Download(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log").Progress(func(current, total, expected int64) {
+		fmt.Println("stream 2 ", current, total, expected)
+	}).Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
+		fmt.Println(request)
+		fmt.Println(response)
+		fmt.Println(data.Len())
+		fmt.Println(err)
+	})
+}
