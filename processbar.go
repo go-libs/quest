@@ -1,7 +1,6 @@
 package quest
 
 type ProgressBar struct {
-	Qreq                     *Qrequest
 	Progress                 func(current, total, expected int64)
 	Total, Current, Expected int64
 }

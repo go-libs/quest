@@ -267,7 +267,6 @@ func (r *Qrequest) Do() (*bytes.Buffer, error) {
 	r.res = res
 	r.Buffer = new(bytes.Buffer)
 	pb := &ProgressBar{
-		Qreq:     r,
 		Total:    res.ContentLength,
 		Progress: r.DataProgress,
 	}
