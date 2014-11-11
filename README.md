@@ -157,11 +157,13 @@ quest.Download(GET, "http://httpbin.org/stream/100", "stream.log").Do()
 #### Downloading a File w/Progress
 
 ```go
-quest.Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log").Progress(func(bytesRead, totalBytesRead, totalBytesExpectedToRead int64) {
+destination := "tmp/stream.log"
+quest.Download(GET, "http://httpbin.org/bytes/1024", destination).Progress(func(bytesRead, totalBytesRead, totalBytesExpectedToRead int64) {
   fmt.Println(bytesRead, totalBytesRead, totalBytesExpectedToRead)
 }).Do()
 
-quest.Download(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log").Progress(func(current, total, expected int64) {
+destination := "tmp/stream2.log"
+quest.Download(GET, "http://httpbin.org/bytes/10240", destination).Progress(func(current, total, expected int64) {
   fmt.Println(current, total, expected)
 }).Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
   fmt.Println(request)
