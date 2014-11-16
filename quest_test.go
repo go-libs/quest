@@ -130,14 +130,16 @@ func TestResponseHandling(t *testing.T) {
 func TestDownload(t *testing.T) {
 	mocha.Convey("Downloading file", t, func() {
 		mocha.Convey("Downloading stream.log in progress", func() {
-			Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log").Progress(func(current, total, expected int64) {
-				mocha.So(current, mocha.ShouldBeLessThanOrEqualTo, total)
+			Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log").Progress(func(c, t, e int64) {
+				log.Println(c, t, e)
+				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
 			}).Do()
 		})
 		mocha.Convey("Downloading stream2.log in progress and invoke response handler", func() {
 			var n int64
 			Download(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log").Progress(func(c, t, e int64) {
 				n = c
+				log.Println(c, t, e)
 				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
 			}).Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
 				l := int64(data.Len())
@@ -153,12 +155,14 @@ func TestUpload(t *testing.T) {
 		mocha.Convey("Uploading one file", func() {
 			Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"}, nil).
 				Progress(func(c, t, e int64) {
+				log.Println(c, t, e)
 				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
 			}).Do()
 		})
 		mocha.Convey("Uploading multi files", func() {
 			Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log", "stream2": "tmp/stream2.log"}, nil).
 				Progress(func(c, t, e int64) {
+				log.Println(c, t, e)
 				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
 			}).Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
 				l := int64(data.Len())
