@@ -3,6 +3,8 @@ package quest
 import (
 	"bytes"
 	"encoding/json"
+	"log"
+	"mime/multipart"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -16,6 +18,8 @@ import (
 	"net/url"
 
 	. "github.com/go-libs/methods"
+	"github.com/go-libs/progress"
+	"github.com/go-libs/syncreader"
 	goquery "github.com/google/go-querystring/query"
 )
 
@@ -41,10 +45,17 @@ type Qrequest struct {
 
 	err error
 
-	Destination string
-	isDownload  bool
+	// Upload
+	files    map[string]string
+	fields   map[string]string
+	isUpload bool
 
-	DataProgress func(current, total, expected int64)
+	// Download
+	isDownload  bool
+	destination string
+
+	// Progress
+	pg *progress.Progress
 }
 
 func (r *Qrequest) QueryParameters(data interface{}) *Qrequest {
@@ -110,6 +121,60 @@ func (r *Qrequest) Parameters(data interface{}) *Qrequest {
 	return r
 }
 
+func (r *Qrequest) Form(files, fields map[string]string) *Qrequest {
+	var data interface{}
+	if len(files) > 0 {
+		var (
+			c  = make(chan bool, 1)
+			b  = new(bytes.Buffer)
+			mw = multipart.NewWriter(b)
+		)
+		//pr, pw := io.Pipe()
+		//pb := &ProgressBar{Progress: func(c, t, e int64) {}}
+		//w := io.MultiWriter(pb, pw)
+		//writer := multipart.NewWriter(w)
+		go func() {
+			for formname, filename := range files {
+				fp, err := mw.CreateFormFile(formname, filepath.Base(filename))
+				if err != nil {
+					log.Fatal(err)
+				}
+				fh, err := os.Open(filename)
+				defer fh.Close()
+				if err != nil {
+					log.Fatal(err)
+				}
+				_, err = io.Copy(fp, fh)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			for k, v := range fields {
+				mw.WriteField(k, v)
+			}
+			mw.Close()
+			//pw.Close()
+			c <- true
+		}()
+		<-c
+		//ppr := progress.NewReader()
+		////ppr.Total = <-cc
+		//ppr.Progress = func(c, t, e int64) {
+		//	log.Println("Uploading stream", c, t, e)
+		//}
+		//rr := syncreader.New(pr, ppr)
+		//log.Println(buff.Len())
+		//body, length := packBodyByReader(pr)
+		r.Header.Set("Content-Type", mw.FormDataContentType())
+		data = b
+	} else {
+		data = fields
+	}
+	r.Parameters(data)
+	return r
+}
+
 func (r *Qrequest) Encoding(t string) *Qrequest {
 	t = strings.ToUpper(t)
 	if t == "JSON" {
@@ -125,8 +190,9 @@ func (r *Qrequest) Authenticate(username, password string) *Qrequest {
 	return r
 }
 
-func (r *Qrequest) Progress(f func(current, total, expected int64)) *Qrequest {
-	r.DataProgress = f
+func (r *Qrequest) Progress(f progress.HandlerFunc) *Qrequest {
+	r.pg = progress.New()
+	r.pg.Progress = f
 	return r
 }
 
@@ -250,44 +316,58 @@ func (r *Qrequest) Do() (*bytes.Buffer, error) {
 		URL:    r.Url,
 		Header: r.Header,
 	}
-	if r.Length > 0 && r.Body != nil {
+
+	// uploading
+	if r.isUpload {
+		r.Form(r.files, r.fields)
+		if r.pg != nil {
+			r.pg.Total = r.Length
+			r.Body = nopCloser(syncreader.New(r.Body, r.pg))
+		}
+	}
+
+	if r.Body != nil {
 		if r.req.Header.Get("Content-Type") == "" {
 			r.req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		}
 		r.req.Body = r.Body
-		r.req.ContentLength = r.Length
+		if r.Length > 0 {
+			r.req.ContentLength = r.Length
+		}
 	}
+
 	r.client = &http.Client{}
 	res, err := r.client.Do(r.req)
+	defer res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
 
 	r.res = res
 	r.Buffer = new(bytes.Buffer)
-	pb := &ProgressBar{
-		Total:    res.ContentLength,
-		Progress: r.DataProgress,
-	}
-	w := io.MultiWriter(r.Buffer, pb)
+	dw := io.MultiWriter(r.Buffer)
 
+	// downloading
 	if r.isDownload {
-		p, err := filepath.Abs(r.Destination)
+		p, err := filepath.Abs(r.destination)
 		if err != nil {
 			return nil, err
 		}
 		f, err := os.Create(p)
-		if err != nil {
-			return nil, err
-		}
-		w = io.MultiWriter(w, f)
 		defer f.Close()
 		if err != nil {
 			return nil, err
 		}
+		if r.pg != nil {
+			r.pg.Total = res.ContentLength
+		}
+		dw = io.MultiWriter(dw, r.pg, f)
+		if err != nil {
+			return nil, err
+		}
 	}
-	_, err = io.Copy(w, res.Body)
+
+	_, err = io.Copy(dw, res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -296,24 +376,40 @@ func (r *Qrequest) Do() (*bytes.Buffer, error) {
 
 // Helpers:
 
+func nopCloser(r io.Reader) io.ReadCloser {
+	return ioutil.NopCloser(r)
+}
+
 func packBodyByString(s string) (io.ReadCloser, int64) {
-	return ioutil.NopCloser(bytes.NewBufferString(s)), int64(len(s))
+	return nopCloser(bytes.NewBufferString(s)), int64(len(s))
 }
 
 func packBodyByBytes(b []byte) (io.ReadCloser, int64) {
-	return ioutil.NopCloser(bytes.NewBuffer(b)), int64(len(b))
+	return nopCloser(bytes.NewBuffer(b)), int64(len(b))
 }
 
 func packBodyByBytesBuffer(b *bytes.Buffer) (io.ReadCloser, int64) {
-	return ioutil.NopCloser(b), int64(b.Len())
+	return nopCloser(b), int64(b.Len())
 }
 
 func packBodyByBytesReader(b *bytes.Reader) (io.ReadCloser, int64) {
-	return ioutil.NopCloser(b), int64(b.Len())
+	return nopCloser(b), int64(b.Len())
+}
+
+func packBodyByPipeReader(pr *io.PipeReader) (io.ReadCloser, int64) {
+	b := new(bytes.Buffer)
+	length, _ := b.ReadFrom(pr)
+	return nopCloser(b), length
+}
+
+func packBodyByReader(pr io.Reader) (io.ReadCloser, int64) {
+	b := new(bytes.Buffer)
+	length, _ := b.ReadFrom(pr)
+	return nopCloser(b), length
 }
 
 func packBodyByStringsReader(b *strings.Reader) (io.ReadCloser, int64) {
-	return ioutil.NopCloser(b), int64(b.Len())
+	return nopCloser(b), int64(b.Len())
 }
 
 func encodesParametersInURL(method Method) bool {

@@ -2,7 +2,7 @@ package quest
 
 import (
 	"bytes"
-	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"testing"
@@ -25,22 +25,20 @@ func TestResponseHandling(t *testing.T) {
 	queryParams.Set("foo", "bar")
 	queryParams.Set("name", "活力")
 
-	Request(GET, "http://httpbin.org/get").
-		QueryParameters(&queryParams).
-		Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
-		fmt.Println(request)
-		fmt.Println(response)
-		fmt.Println(data)
-		fmt.Println(err)
+	mocha.Convey("QueryParameters, query string", t, func() {
+		Request(GET, "http://httpbin.org/get").
+			QueryParameters(&queryParams).
+			Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
+			mocha.So(req.URL.String(), mocha.ShouldEqual, "http://httpbin.org/get?foo=bar&name=%E6%B4%BB%E5%8A%9B")
+		})
 	})
 
-	Request(POST, "http://httpbin.org/post").
-		Parameters(queryParams).
-		Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
-		fmt.Println(request)
-		fmt.Println(response)
-		fmt.Println(data)
-		fmt.Println(err)
+	mocha.Convey("Parameters, ContentLength should equal to buffer length", t, func() {
+		Request(POST, "http://httpbin.org/post").
+			Parameters(queryParams).
+			Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
+			mocha.So(res.ContentLength, mocha.ShouldEqual, int64(data.Len()))
+		})
 	})
 
 	parameters := map[string]interface{}{
@@ -57,20 +55,26 @@ func TestResponseHandling(t *testing.T) {
 		Origin string
 	}
 
-	Request(POST, "http://httpbin.org/post").
-		Encoding("JSON").
-		Parameters(parameters).
-		ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct, e error) {
-		fmt.Println(data.Headers["Host"])
-		fmt.Println(data.Headers["Content-Type"])
-		fmt.Println(data.Origin)
-	}).
-		ResponseJSON(func(req *http.Request, res *http.Response, data DataStruct2, e error) {
-		fmt.Println(data.Origin)
-	}).
-		// Nothing happend
-		ResponseJSON(func(req *http.Request, res *http.Response, data DataStruct2, e error, g error) {
-		fmt.Println(e)
+	mocha.Convey("Response JSON", t, func() {
+		Request(POST, "http://httpbin.org/post").
+			Encoding("JSON").
+			Parameters(parameters).
+			ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct, e error) {
+			mocha.Convey("Data - a pointer struct", func() {
+				mocha.So(data, mocha.ShouldPointTo, data)
+				mocha.So(data.Headers["Host"], mocha.ShouldEqual, "httpbin.org")
+			})
+		}).
+			ResponseJSON(func(req *http.Request, res *http.Response, data DataStruct2, e error) {
+			mocha.Convey("Data - a struct", func() {
+				mocha.So(&data, mocha.ShouldNotPointTo, &DataStruct2{})
+				mocha.So(data.Origin, mocha.ShouldNotBeNil)
+			})
+		}).
+			// Nothing happend
+			ResponseJSON(func(req *http.Request, res *http.Response, data DataStruct2, e error, g error) {
+			log.Println("Nothing happend!")
+		})
 	})
 
 	type PostParameters struct {
@@ -92,37 +96,74 @@ func TestResponseHandling(t *testing.T) {
 		Json    PostParameters `json:"json,omitempty"`
 	}
 
-	Request(POST, "http://httpbin.org/post").
-		Encoding("JSON").
-		Parameters(parameters2).
-		ResponseJSON(func(req *http.Request, res *http.Response, data DataStruct4, e error) {
-		fmt.Println(data)
-	}).
-		ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct3, e error) {
-		fmt.Println(data)
-		fmt.Println(data.Json)
+	mocha.Convey("Response JSON, using JSON decode", t, func() {
+		Request(POST, "http://httpbin.org/post").
+			Encoding("JSON").
+			Parameters(parameters2).
+			ResponseJSON(func(req *http.Request, res *http.Response, data DataStruct4, e error) {
+			mocha.Convey("Using DataStruct4 JSON struct", func() {
+				mocha.So(data.Origin, mocha.ShouldNotBeNil)
+			})
+		}).
+			ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct3, e error) {
+			mocha.Convey("Using DataStruct3 JSON struct", func() {
+				mocha.So(&data.Json, mocha.ShouldResemble, parameters2)
+			})
+		})
 	})
 
-	type Options struct {
-		Foo string `url:"foo"`
-		Baz []int  `url:"baz"`
-	}
+	mocha.Convey("Encoding Query Options", t, func() {
+		type Options struct {
+			Foo string `url:"foo"`
+			Baz []int  `url:"baz"`
+		}
 
-	// http://httpbin.org/get http://httpbin.org/get?baz=233&baz=377&baz=610&foo=bar
-	fmt.Println(Request(GET, "http://httpbin.org/get").
-		QueryParameters(Options{"bar", []int{233, 377, 610}}))
+		// http://httpbin.org/get
+		Request(GET, "http://httpbin.org/get").
+			QueryParameters(Options{"bar", []int{233, 377, 610}}).
+			Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
+			mocha.So(req.URL.String(), mocha.ShouldEqual, "http://httpbin.org/get?baz=233&baz=377&baz=610&foo=bar")
+		})
+	})
 }
 
 func TestDownload(t *testing.T) {
-	Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log").Progress(func(current, total, expected int64) {
-		fmt.Println("stream ", current, total, expected)
-	}).Do()
-	Download(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log").Progress(func(current, total, expected int64) {
-		fmt.Println("stream 2 ", current, total, expected)
-	}).Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
-		fmt.Println(request)
-		fmt.Println(response)
-		fmt.Println(data.Len())
-		fmt.Println(err)
+	mocha.Convey("Downloading file", t, func() {
+		mocha.Convey("Downloading stream.log in progress", func() {
+			Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log").Progress(func(current, total, expected int64) {
+				mocha.So(current, mocha.ShouldBeLessThanOrEqualTo, total)
+			}).Do()
+		})
+		mocha.Convey("Downloading stream2.log in progress and invoke response handler", func() {
+			var n int64
+			Download(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log").Progress(func(c, t, e int64) {
+				n = c
+				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
+			}).Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
+				l := int64(data.Len())
+				mocha.So(n, mocha.ShouldEqual, l)
+				mocha.So(res.ContentLength, mocha.ShouldEqual, l)
+			})
+		})
+	})
+}
+
+func TestUpload(t *testing.T) {
+	mocha.Convey("Uploading file", t, func() {
+		mocha.Convey("Uploading one file", func() {
+			Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"}, nil).
+				Progress(func(c, t, e int64) {
+				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
+			}).Do()
+		})
+		mocha.Convey("Uploading multi files", func() {
+			Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log", "stream2": "tmp/stream2.log"}, nil).
+				Progress(func(c, t, e int64) {
+				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
+			}).Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
+				l := int64(data.Len())
+				mocha.So(res.ContentLength, mocha.ShouldEqual, l)
+			})
+		})
 	})
 }

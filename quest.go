@@ -15,23 +15,26 @@ func Request(method Method, endpoint string) *Qrequest {
 		os.Exit(1)
 	}
 	request := &Qrequest{
-		Method:       method,
-		Endpoint:     endpoint,
-		Url:          url,
-		Header:       make(http.Header),
-		DataProgress: func(current, total, expected int64) {},
+		Method:   method,
+		Endpoint: endpoint,
+		Url:      url,
+		Header:   make(http.Header),
 	}
 	return request
 }
 
-func Upload(method Method, endpoint string) *Qrequest {
-	return Request(method, endpoint)
+func Upload(method Method, endpoint string, files, fields map[string]string) *Qrequest {
+	r := Request(method, endpoint)
+	r.isUpload = true
+	r.files = files
+	r.fields = fields
+	return r
 }
 
 func Download(method Method, endpoint, destination string) *Qrequest {
 	r := Request(method, endpoint)
 	r.isDownload = true
-	r.Destination = destination
+	r.destination = destination
 	return r
 }
 

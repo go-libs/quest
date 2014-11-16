@@ -23,10 +23,10 @@ quest.Request(GET, "http://httpbin.org/get")
 ```go
 quest.Request(GET, "http://httpbin.org/get").
   Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, e error) {
-  fmt.Println(req)
-  fmt.Println(res)
-  fmt.Println(data)
-  fmt.Println(err)
+  log.Println(req)
+  log.Println(res)
+  log.Println(data)
+  log.Println(err)
 })
 ```
 
@@ -48,7 +48,7 @@ Built-in Response Methods
 ```go
 quest.Request(GET, "http://httpbin.org/get").
   ResponseString(func(req *http.Request, res *http.Response, data string, e error) {
-  fmt.Println(data)
+  log.Println(data)
 })
 ```
 
@@ -63,12 +63,12 @@ type DataStruct struct {
 
 quest.Request(GET, "http://httpbin.org/get").
   ResponseJSON(func(req *http.Request, res *http.Response, data DataStruct, e error) {
-  fmt.Println(data)
+  log.Println(data)
 })
 
 quest.Request(GET, "http://httpbin.org/get").
   ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct, e error) {
-  fmt.Println(data)
+  log.Println(data)
 })
 ```
 
@@ -79,10 +79,10 @@ Response handlers can even be chained:
 ```go
 quest.Request(GET, "http://httpbin.org/get").
   ResponseString(func(req *http.Request, res *http.Response, data string, e error) {
-  fmt.Println(data)
+  log.Println(data)
 }).
   ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct, e error) {
-  fmt.Println(data)
+  log.Println(data)
 })
 ```
 
@@ -135,10 +135,10 @@ quest.Request(POST, "http://httpbin.org/post").
   Encoding("JSON").
   Parameters(&parameters).
   ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct, e error) {
-  fmt.Println(data)
+  log.Println(data)
 })
   ResponseJSON(func(req *http.Request, res *http.Response, data OtherDataStruct, e error) {
-  fmt.Println(data)
+  log.Println(data)
 })
 ```
 
@@ -158,21 +158,41 @@ quest.Download(GET, "http://httpbin.org/stream/100", "stream.log").Do()
 
 ```go
 destination := "tmp/stream.log"
-quest.Download(GET, "http://httpbin.org/bytes/1024", destination).Progress(func(bytesRead, totalBytesRead, totalBytesExpectedToRead int64) {
-  fmt.Println(bytesRead, totalBytesRead, totalBytesExpectedToRead)
-}).Do()
+quest.Download(GET, "http://httpbin.org/bytes/1024", destination).
+  Progress(func(bytesRead, totalBytesRead, totalBytesExpectedToRead int64) {
+    log.Println(bytesRead, totalBytesRead, totalBytesExpectedToRead)
+  }).Do()
 
 destination := "tmp/stream2.log"
-quest.Download(GET, "http://httpbin.org/bytes/10240", destination).Progress(func(current, total, expected int64) {
-  fmt.Println(current, total, expected)
-}).Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
-  fmt.Println(request)
-  fmt.Println(response)
-  fmt.Println(data.Len())
-  fmt.Println(err)
-})
+quest.Download(GET, "http://httpbin.org/bytes/10240", destination).
+  Progress(func(current, total, expected int64) {
+    log.Println(current, total, expected)
+  }).Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
+    log.Println(data.Len())
+  })
 ```
 
+
+### Uploading
+
+
+#### Uploading a File
+
+```go
+quest.Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"}, nil).Do()
+```
+
+
+#### Uploading multi files and in progress
+
+```go
+quest.Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log", "stream2": "tmp/stream2.log"}, nil).
+  Progress(func(current, total, expected int64) {
+    log.Println(current, total, expected)
+  }).Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
+    log.Println(data.Len())
+  })
+```
 
 
 ## License
