@@ -372,3 +372,12 @@ func (r *Qrequest) Do() (*bytes.Buffer, error) {
 	}
 	return r.Buffer, nil
 }
+
+func encodesParametersInURL(method Method) bool {
+	switch method {
+	case GET, HEAD, DELETE:
+		return true
+	default:
+		return false
+	}
+}

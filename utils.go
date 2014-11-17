@@ -42,12 +42,3 @@ func packBodyByReader(pr io.Reader) (io.ReadCloser, int64) {
 func packBodyByStringsReader(b *strings.Reader) (io.ReadCloser, int64) {
 	return nopCloser(b), int64(b.Len())
 }
-
-func encodesParametersInURL(method Method) bool {
-	switch method {
-	case GET, HEAD, DELETE:
-		return true
-	default:
-		return false
-	}
-}
