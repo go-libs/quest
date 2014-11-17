@@ -1,7 +1,7 @@
 # quest
 
 [![build status][travis-image]][travis-url]
-__[Docs]()__
+[![GoDoc][godoc-image][godoc-url]
 
 Elegant HTTP Networking in Go.
 
@@ -201,6 +201,7 @@ quest.Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/s
 
 MIT
 
-[Docs]: http://godoc.org/github.com/go-libs/quest
 [travis-image]: https://img.shields.io/travis/go-libs/quest/master.svg?style=flat-square
 [travis-url]: https://travis-ci.org/go-libs/quest
+[godoc-image]: https://godoc.org/github.com/go-libs/quest?status.svg
+[godoc-url]: http://godoc.org/github.com/go-libs/quest
