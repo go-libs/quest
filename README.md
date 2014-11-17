@@ -1,7 +1,7 @@
 # quest
 
 [![build status][travis-image]][travis-url]
-[![GoDoc][godoc-image][godoc-url]
+[![GoDoc][godoc-image]][godoc-url]
 
 Elegant HTTP Networking in Go.
 
