@@ -160,7 +160,7 @@ func TestUpload(t *testing.T) {
 		Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"}, nil).
 			Progress(func(c, tt, e int64) {
 			log.Println(c, tt, e)
-			//mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, tt)
+			mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, tt)
 		}).Do()
 	})
 	mocha.Convey("Uploading multi files", t, func() {
