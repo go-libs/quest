@@ -158,14 +158,14 @@ func TestDownload(t *testing.T) {
 func TestUpload(t *testing.T) {
 	mocha.Convey("Uploading file", t, func() {
 		mocha.Convey("Uploading one file", func() {
-			Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"}, nil).
+			Upload(POST, "http://httpbin.org/post", map[string]string{"quest_test": "quest_test.go"}, nil).
 				Progress(func(c, t, e int64) {
 				log.Println(c, t, e)
 				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
 			}).Do()
 		})
 		mocha.Convey("Uploading multi files", func() {
-			Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log", "stream2": "tmp/stream2.log"}, nil).
+			Upload(POST, "http://httpbin.org/post", map[string]string{"quest_test": "quest_test.go", "qrequest_test": "qrequest_test.go"}, nil).
 				Progress(func(c, t, e int64) {
 				log.Println(c, t, e)
 				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
