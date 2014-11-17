@@ -3,9 +3,15 @@
 [![build status][travis-image]][travis-url]
 [![GoDoc][godoc-image]][godoc-url]
 
-Elegant HTTP Networking in Go.
+
+**quest** is an HTTP networking library written in Go.
+
+- [x] Chainable Request / Response methods
+- [x] URL / JSON / Parameter Encoding
+- [x] Progress Tracking
 
 
+## Features
 
 ## Usage
 

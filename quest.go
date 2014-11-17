@@ -3,39 +3,39 @@ package quest
 import (
 	"net/http"
 	stdurl "net/url"
-	"os"
 
 	. "github.com/go-libs/methods"
 )
 
-func Request(method Method, endpoint string) *Qrequest {
+func Request(method Method, endpoint string) (q *Qrequest) {
 	url, err := stdurl.ParseRequestURI(endpoint)
 	if err != nil {
-		os.Stderr.WriteString(err.Error())
-		os.Exit(1)
+		panic(err)
 	}
-	request := &Qrequest{
+	q = &Qrequest{
 		Method:   method,
 		Endpoint: endpoint,
 		Url:      url,
 		Header:   make(http.Header),
 	}
-	return request
+	return
 }
 
-func Upload(method Method, endpoint string, files, fields map[string]string) *Qrequest {
-	r := Request(method, endpoint)
-	r.isUpload = true
-	r.files = files
-	r.fields = fields
-	return r
+// Upload File / Data / Stream
+func Upload(method Method, endpoint string, files, fields map[string]string) (q *Qrequest) {
+	q = Request(method, endpoint)
+	q.isUpload = true
+	q.files = files
+	q.fields = fields
+	return
 }
 
-func Download(method Method, endpoint, destination string) *Qrequest {
-	r := Request(method, endpoint)
-	r.isDownload = true
-	r.destination = destination
-	return r
+// Download File / Data / Stream to file
+func Download(method Method, endpoint, destination string) (q *Qrequest) {
+	q = Request(method, endpoint)
+	q.isDownload = true
+	q.destination = destination
+	return
 }
 
 func Println() {}
