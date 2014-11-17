@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"testing"
 
 	. "github.com/go-libs/methods"
@@ -128,16 +129,20 @@ func TestResponseHandling(t *testing.T) {
 }
 
 func TestDownload(t *testing.T) {
+	os.Mkdir("tmp", os.ModePerm)
+
 	mocha.Convey("Downloading file", t, func() {
 		mocha.Convey("Downloading stream.log in progress", func() {
-			Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log").Progress(func(c, t, e int64) {
+			Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log").
+				Progress(func(c, t, e int64) {
 				log.Println(c, t, e)
 				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
 			}).Do()
 		})
 		mocha.Convey("Downloading stream2.log in progress and invoke response handler", func() {
 			var n int64
-			Download(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log").Progress(func(c, t, e int64) {
+			Download(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log").
+				Progress(func(c, t, e int64) {
 				n = c
 				log.Println(c, t, e)
 				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
