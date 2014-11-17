@@ -6,12 +6,13 @@
 
 **quest** is an HTTP networking library written in Go.
 
+
+## Features
+
 - [x] Chainable Request / Response methods
 - [x] URL / JSON / Parameter Encoding
 - [x] Progress Tracking
 
-
-## Features
 
 ## Usage
 
