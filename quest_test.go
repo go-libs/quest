@@ -132,14 +132,14 @@ func TestDownload(t *testing.T) {
 	os.Mkdir("tmp", os.ModePerm)
 
 	mocha.Convey("Downloading file", t, func() {
-		mocha.Convey("Downloading stream.log in progress", func() {
+		mocha.Convey("Downloading stream.log in progress\n", func() {
 			Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log").
 				Progress(func(c, t, e int64) {
 				log.Println(c, t, e)
 				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
 			}).Do()
 		})
-		mocha.Convey("Downloading stream2.log in progress and invoke response handler", func() {
+		mocha.Convey("Downloading stream2.log in progress and invoke response handler\n", func() {
 			var n int64
 			Download(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log").
 				Progress(func(c, t, e int64) {
@@ -156,21 +156,23 @@ func TestDownload(t *testing.T) {
 }
 
 func TestUpload(t *testing.T) {
-	mocha.Convey("Uploading one file", t, func() {
-		Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"}, nil).
-			Progress(func(c, tt, e int64) {
-			log.Println(c, tt, e)
-			mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, tt)
-		}).Do()
-	})
-	mocha.Convey("Uploading multi files", t, func() {
-		Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log", "stream2": "tmp/stream2.log"}, nil).
-			Progress(func(c, tt, e int64) {
-			log.Println(c, tt, e)
-			//mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, tt)
-		}).Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
-			l := int64(data.Len())
-			mocha.So(res.ContentLength, mocha.ShouldEqual, l)
+	mocha.Convey("Uploading file", t, func(m mocha.C) {
+		m.Convey("Uploading one file\n", func() {
+			Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"}, nil).
+				Progress(func(c, t, e int64) {
+				log.Println(c, t, e)
+				m.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
+			}).Do()
+		})
+		mocha.Convey("Uploading multi files\n", func() {
+			Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log", "stream2": "tmp/stream2.log"}, nil).
+				Progress(func(c, t, e int64) {
+				log.Println(c, t, e)
+				m.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
+			}).Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
+				l := int64(data.Len())
+				m.So(res.ContentLength, mocha.ShouldEqual, l)
+			})
 		})
 	})
 }
