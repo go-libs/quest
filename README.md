@@ -1,10 +1,10 @@
 # quest
 
 [![build status][travis-image]][travis-url]
+__[Docs]()__
 
 Elegant HTTP Networking in Go.
 
-__[Docs]()__
 
 
 ## Usage
