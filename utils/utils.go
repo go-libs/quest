@@ -1,9 +1,11 @@
-package quest
+package utils
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"strings"
 )
 
@@ -41,4 +43,35 @@ func packBodyByReader(pr io.Reader) (io.ReadCloser, int64) {
 
 func packBodyByStringsReader(b *strings.Reader) (io.ReadCloser, int64) {
 	return nopCloser(b), int64(b.Len())
+}
+
+func PackBody(data interface{}) (rc io.ReadCloser, n int64, err error) {
+	switch t := data.(type) {
+	case string:
+		rc, n = packBodyByString(t)
+		return
+	case []byte:
+		rc, n = packBodyByBytes(t)
+		return
+	case *url.Values:
+		rc, n = packBodyByString(t.Encode())
+		return
+	case *bytes.Buffer:
+		rc, n = packBodyByBytesBuffer(t)
+		return
+	case *bytes.Reader:
+		rc, n = packBodyByBytesReader(t)
+		return
+	case *strings.Reader:
+		rc, n = packBodyByStringsReader(t)
+		return
+	// JSON Object
+	default:
+		b, err := json.Marshal(data)
+		if err != nil {
+			return nil, 0, err
+		}
+		rc, n = packBodyByBytes(b)
+	}
+	return
 }

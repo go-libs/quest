@@ -1,23 +1,24 @@
-package quest
+package request
 
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
+	"io/ioutil"
 	"log"
 	"mime/multipart"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
 
-	"errors"
-	"io"
-	"net/http"
-	"net/url"
-
 	. "github.com/go-libs/methods"
 	"github.com/go-libs/progress"
+	"github.com/go-libs/quest/utils"
 	"github.com/go-libs/syncreader"
 	goquery "github.com/google/go-querystring/query"
 )
@@ -26,7 +27,7 @@ type HandlerFunc func(*http.Request, *http.Response, *bytes.Buffer, error)
 type BytesHandlerFunc func(*http.Request, *http.Response, []byte, error)
 type StringHandlerFunc func(*http.Request, *http.Response, string, error)
 
-type Qrequest struct {
+type Request struct {
 	Method   Method
 	Endpoint string
 	Url      *url.URL
@@ -45,19 +46,34 @@ type Qrequest struct {
 	err error
 
 	// Upload
+	IsUpload bool
 	files    map[string]string
 	fields   map[string]string
-	isUpload bool
 
 	// Download
-	isDownload  bool
+	IsDownload  bool
 	destination string
 
 	// Progress
 	pg *progress.Progress
 }
 
-func (r *Qrequest) QueryParameters(data interface{}) *Qrequest {
+func (r *Request) Files(files map[string]string) *Request {
+	r.files = files
+	return r
+}
+
+func (r *Request) Fields(fields map[string]string) *Request {
+	r.fields = fields
+	return r
+}
+
+func (r *Request) Destionation(destination string) *Request {
+	r.destination = destination
+	return r
+}
+
+func (r *Request) QueryParameters(data interface{}) *Request {
 	var queryString string
 	switch t := data.(type) {
 	case string:
@@ -77,42 +93,14 @@ func (r *Qrequest) QueryParameters(data interface{}) *Qrequest {
 	return r
 }
 
-func (r *Qrequest) Parameters(data interface{}) *Qrequest {
+func (r *Request) Parameters(data interface{}) *Request {
 	if encodesParametersInURL(r.Method) {
 		return r
 	}
-	var (
-		body   io.ReadCloser
-		length int64
-	)
-	switch t := data.(type) {
-	case string:
-		body, length = packBodyByString(t)
-		break
-	case []byte:
-		body, length = packBodyByBytes(t)
-		break
-	case *url.Values:
-		body, length = packBodyByString(t.Encode())
-		break
-	case *bytes.Buffer:
-		body, length = packBodyByBytesBuffer(t)
-		break
-	case *bytes.Reader:
-		body, length = packBodyByBytesReader(t)
-		break
-	case *strings.Reader:
-		body, length = packBodyByStringsReader(t)
-		break
-	// JSON Object
-	default:
-		b, err := json.Marshal(data)
-		if err != nil {
-			r.err = err
-			return r
-		}
-		body, length = packBodyByBytes(b)
-	}
+
+	body, length, err := utils.PackBody(data)
+
+	r.err = err
 	if length > 0 && body != nil {
 		r.Body = body
 		r.Length = length
@@ -120,7 +108,7 @@ func (r *Qrequest) Parameters(data interface{}) *Qrequest {
 	return r
 }
 
-func (r *Qrequest) Form(files, fields map[string]string) *Qrequest {
+func (r *Request) Form(files, fields map[string]string) *Request {
 	var data interface{}
 	if len(files) > 0 {
 		var (
@@ -164,7 +152,7 @@ func (r *Qrequest) Form(files, fields map[string]string) *Qrequest {
 		//}
 		//rr := syncreader.New(pr, ppr)
 		//log.Println(buff.Len())
-		//body, length := packBodyByReader(pr)
+		//body, length := PackBodyByReader(pr)
 		r.Header.Set("Content-Type", mw.FormDataContentType())
 		data = b
 	} else {
@@ -174,7 +162,7 @@ func (r *Qrequest) Form(files, fields map[string]string) *Qrequest {
 	return r
 }
 
-func (r *Qrequest) Encoding(t string) *Qrequest {
+func (r *Request) Encoding(t string) *Request {
 	t = strings.ToUpper(t)
 	if t == "JSON" {
 		t = "application/json"
@@ -185,17 +173,17 @@ func (r *Qrequest) Encoding(t string) *Qrequest {
 	return r
 }
 
-func (r *Qrequest) Authenticate(username, password string) *Qrequest {
+func (r *Request) Authenticate(username, password string) *Request {
 	return r
 }
 
-func (r *Qrequest) Progress(f progress.HandlerFunc) *Qrequest {
+func (r *Request) Progress(f progress.HandlerFunc) *Request {
 	r.pg = progress.New()
 	r.pg.Progress = f
 	return r
 }
 
-func (r *Qrequest) response() (*bytes.Buffer, error) {
+func (r *Request) response() (*bytes.Buffer, error) {
 	if r.err != nil {
 		return r.Buffer, r.err
 	}
@@ -206,25 +194,25 @@ func (r *Qrequest) response() (*bytes.Buffer, error) {
 	return r.Do()
 }
 
-func (r *Qrequest) Response(handler HandlerFunc) *Qrequest {
+func (r *Request) Response(handler HandlerFunc) *Request {
 	_, err := r.response()
 	handler(r.req, r.res, r.Buffer, err)
 	return r
 }
 
-func (r *Qrequest) ResponseBytes(handler BytesHandlerFunc) *Qrequest {
+func (r *Request) ResponseBytes(handler BytesHandlerFunc) *Request {
 	_, err := r.response()
 	handler(r.req, r.res, r.Buffer.Bytes(), err)
 	return r
 }
 
-func (r *Qrequest) ResponseString(handler StringHandlerFunc) *Qrequest {
+func (r *Request) ResponseString(handler StringHandlerFunc) *Request {
 	_, err := r.response()
 	handler(r.req, r.res, r.Buffer.String(), err)
 	return r
 }
 
-func (r *Qrequest) ResponseJSON(f interface{}) *Qrequest {
+func (r *Request) ResponseJSON(f interface{}) *Request {
 	var (
 		fn                    = reflect.ValueOf(f)
 		t                     = reflect.TypeOf(f)
@@ -270,20 +258,20 @@ func (r *Qrequest) ResponseJSON(f interface{}) *Qrequest {
 	return r
 }
 
-func (r *Qrequest) Validate() *Qrequest {
+func (r *Request) Validate() *Request {
 	return r
 }
 
-func (r *Qrequest) validateAcceptContentType(map[string]string) bool {
+func (r *Request) validateAcceptContentType(map[string]string) bool {
 	return true
 }
 
 // Acceptable Content Type
-func (r *Qrequest) ValidateAcceptContentType(map[string]string) bool {
+func (r *Request) ValidateAcceptContentType(map[string]string) bool {
 	return true
 }
 
-func (r *Qrequest) validateStatusCode(statusCodes ...int) bool {
+func (r *Request) validateStatusCode(statusCodes ...int) bool {
 	statusCode := r.res.StatusCode
 	if len(statusCodes) > 0 {
 		for _, c := range statusCodes {
@@ -299,7 +287,7 @@ func (r *Qrequest) validateStatusCode(statusCodes ...int) bool {
 }
 
 // Status Code
-func (r *Qrequest) ValidateStatusCode(statusCodes ...int) *Qrequest {
+func (r *Request) ValidateStatusCode(statusCodes ...int) *Request {
 	r.response()
 	if !r.validateStatusCode(statusCodes...) {
 		r.err = errors.New("http: invalid status code " + strconv.Itoa(r.res.StatusCode))
@@ -307,9 +295,9 @@ func (r *Qrequest) ValidateStatusCode(statusCodes ...int) *Qrequest {
 	return r
 }
 
-func (r *Qrequest) Cancel() {}
+func (r *Request) Cancel() {}
 
-func (r *Qrequest) Do() (*bytes.Buffer, error) {
+func (r *Request) Do() (*bytes.Buffer, error) {
 	r.req = &http.Request{
 		Method: r.Method.String(),
 		URL:    r.Url,
@@ -317,11 +305,11 @@ func (r *Qrequest) Do() (*bytes.Buffer, error) {
 	}
 
 	// uploading
-	if r.isUpload {
+	if r.IsUpload {
 		r.Form(r.files, r.fields)
 		if r.pg != nil {
 			r.pg.Total = r.Length
-			r.Body = nopCloser(syncreader.New(r.Body, r.pg))
+			r.Body = ioutil.NopCloser(syncreader.New(r.Body, r.pg))
 		}
 	}
 
@@ -347,7 +335,7 @@ func (r *Qrequest) Do() (*bytes.Buffer, error) {
 	dw := io.MultiWriter(r.Buffer)
 
 	// downloading
-	if r.isDownload {
+	if r.IsDownload {
 		p, err := filepath.Abs(r.destination)
 		if err != nil {
 			return nil, err

@@ -5,14 +5,15 @@ import (
 	stdurl "net/url"
 
 	. "github.com/go-libs/methods"
+	req "github.com/go-libs/quest/request"
 )
 
-func Request(method Method, endpoint string) (q *Qrequest) {
+func Request(method Method, endpoint string) (r *req.Request) {
 	url, err := stdurl.ParseRequestURI(endpoint)
 	if err != nil {
 		panic(err)
 	}
-	q = &Qrequest{
+	r = &req.Request{
 		Method:   method,
 		Endpoint: endpoint,
 		Url:      url,
@@ -21,20 +22,20 @@ func Request(method Method, endpoint string) (q *Qrequest) {
 	return
 }
 
-// Upload File / Data / Stream
-func Upload(method Method, endpoint string, files, fields map[string]string) (q *Qrequest) {
-	q = Request(method, endpoint)
-	q.isUpload = true
-	q.files = files
-	q.fields = fields
+// upload file / data / stream
+func Upload(method Method, endpoint string, files, fields map[string]string) (r *req.Request) {
+	r = Request(method, endpoint)
+	r.IsUpload = true
+	r.Files(files)
+	r.Fields(fields)
 	return
 }
 
-// Download File / Data / Stream to file
-func Download(method Method, endpoint, destination string) (q *Qrequest) {
-	q = Request(method, endpoint)
-	q.isDownload = true
-	q.destination = destination
+// download file / data / stream to file
+func Download(method Method, endpoint, destination string) (r *req.Request) {
+	r = Request(method, endpoint)
+	r.IsDownload = true
+	r.Destionation(destination)
 	return
 }
 
