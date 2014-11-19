@@ -315,10 +315,6 @@ func (r *Request) Do() (*bytes.Buffer, error) {
 			fields, _ = r.rawBody.(map[string]string)
 		}
 		r.Form(r.files, fields)
-		if r.pg != nil {
-			r.pg.Total = r.Length
-			r.Body = ioutil.NopCloser(syncreader.New(r.Body, r.pg))
-		}
 	}
 
 	// pack body
