@@ -72,7 +72,7 @@ func (r *Request) Files(files map[string]interface{}) *Request {
 	return r
 }
 
-func (r *Request) Destionation(destination interface{}) *Request {
+func (r *Request) Destination(destination interface{}) *Request {
 	r.destination = destination
 	return r
 }

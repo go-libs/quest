@@ -40,7 +40,7 @@ func Download(method Method, endpoint string, destination interface{}) (r *req.R
 		return
 	}
 	r.IsDownload = true
-	r.Destionation(destination)
+	r.Destination(destination)
 	return
 }
 
