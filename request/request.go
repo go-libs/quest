@@ -20,20 +20,29 @@ import (
 	"github.com/go-libs/progress"
 	"github.com/go-libs/quest/utils"
 	"github.com/go-libs/syncreader"
-	goquery "github.com/google/go-querystring/query"
 )
 
 type HandlerFunc func(*http.Request, *http.Response, *bytes.Buffer, error)
 type BytesHandlerFunc func(*http.Request, *http.Response, []byte, error)
 type StringHandlerFunc func(*http.Request, *http.Response, string, error)
 
+// A Request manages communication with http service.
 type Request struct {
-	Method   Method
+	// HTTP method
+	Method Method
+
+	// Base URL for Requests.
 	Endpoint string
 	Url      *url.URL
-	req      *http.Request
-	res      *http.Response
-	client   *http.Client
+
+	// HTTP request
+	req *http.Request
+
+	// HTTP response
+	res *http.Response
+
+	// HTTP client
+	client *http.Client
 
 	// request header & body
 	Header http.Header
@@ -73,23 +82,10 @@ func (r *Request) Destionation(destination string) *Request {
 	return r
 }
 
-func (r *Request) QueryParameters(data interface{}) *Request {
-	var queryString string
-	switch t := data.(type) {
-	case string:
-		queryString = t
-		break
-	case []byte:
-		queryString = string(t)
-		break
-	case *url.Values:
-		queryString = t.Encode()
-		break
-	default:
-		qs, _ := goquery.Values(t)
-		queryString = qs.Encode()
-	}
-	r.Url.RawQuery = queryString
+func (r *Request) QueryString(data interface{}) *Request {
+	qs, err := utils.QueryString(data)
+	r.err = err
+	r.Url.RawQuery = qs
 	return r
 }
 

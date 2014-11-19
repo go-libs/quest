@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/url"
 	"strings"
+
+	goquery "github.com/google/go-querystring/query"
 )
 
 func nopCloser(r io.Reader) io.ReadCloser {
@@ -45,6 +47,7 @@ func packBodyByStringsReader(b *strings.Reader) (io.ReadCloser, int64) {
 	return nopCloser(b), int64(b.Len())
 }
 
+// Pack Request's body to io.ReadCloser.
 func PackBody(data interface{}) (rc io.ReadCloser, n int64, err error) {
 	switch t := data.(type) {
 	case string:
@@ -72,6 +75,27 @@ func PackBody(data interface{}) (rc io.ReadCloser, n int64, err error) {
 			return nil, 0, err
 		}
 		rc, n = packBodyByBytes(b)
+	}
+	return
+}
+
+func QueryString(options interface{}) (qs string, err error) {
+	switch t := options.(type) {
+	case string:
+		qs = t
+		return
+	case []byte:
+		qs = string(t)
+		return
+	case *url.Values:
+		qs = t.Encode()
+		return
+	default:
+		v, err := goquery.Values(t)
+		if err != nil {
+			return "", err
+		}
+		qs = v.Encode()
 	}
 	return
 }

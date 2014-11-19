@@ -26,9 +26,9 @@ func TestResponseHandling(t *testing.T) {
 	queryParams.Set("foo", "bar")
 	queryParams.Set("name", "活力")
 
-	mocha.Convey("QueryParameters, query string", t, func() {
+	mocha.Convey("QueryString, query string", t, func() {
 		Request(GET, "http://httpbin.org/get").
-			QueryParameters(&queryParams).
+			QueryString(&queryParams).
 			Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
 			mocha.So(req.URL.String(), mocha.ShouldEqual, "http://httpbin.org/get?foo=bar&name=%E6%B4%BB%E5%8A%9B")
 		})
@@ -121,7 +121,7 @@ func TestResponseHandling(t *testing.T) {
 
 		// http://httpbin.org/get
 		Request(GET, "http://httpbin.org/get").
-			QueryParameters(Options{"bar", []int{233, 377, 610}}).
+			QueryString(Options{"bar", []int{233, 377, 610}}).
 			Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
 			mocha.So(req.URL.String(), mocha.ShouldEqual, "http://httpbin.org/get?baz=233&baz=377&baz=610&foo=bar")
 		})
