@@ -82,7 +82,7 @@ func (r *Request) Destionation(destination string) *Request {
 	return r
 }
 
-func (r *Request) QueryString(data interface{}) *Request {
+func (r *Request) Query(data interface{}) *Request {
 	qs, err := utils.QueryString(data)
 	r.err = err
 	r.Url.RawQuery = qs
