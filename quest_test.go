@@ -164,7 +164,10 @@ func TestDownload(t *testing.T) {
 func TestUpload(t *testing.T) {
 	mocha.Convey("Uploading file", t, func(m mocha.C) {
 		m.Convey("Uploading one file\n", func() {
-			q, _ := Upload(POST, "http://httpbin.org/post", map[string]interface{}{"stream": "tmp/stream.log"})
+			data := map[string]interface{}{
+				"stream": "tmp/stream.log",
+			}
+			q, _ := Upload(POST, "http://httpbin.org/post", data)
 			q.
 				Progress(func(c, t, e int64) {
 				log.Println(c, t, e)
@@ -174,8 +177,13 @@ func TestUpload(t *testing.T) {
 		mocha.Convey("Uploading multi files\n", func() {
 			stream2, _ := os.Open("tmp/stream2.log")
 			stream3 := bytes.NewBufferString(`Hello Quest!`)
+			data := map[string]interface{}{
+				"stream1": "tmp/stream.log", // filepath or filename
+				"stream2": stream2,          // *os.File
+				"stream3": stream3,          // io.Reader, filename is fieldname `stream3`
+			}
 
-			q, _ := Upload(POST, "http://httpbin.org/post", map[string]interface{}{"stream": "tmp/stream.log", "stream2": stream2, "stream3": stream3})
+			q, _ := Upload(POST, "http://httpbin.org/post", data)
 			q.
 				Parameters(map[string]string{"foo": "bar", "bar": "foo"}).
 				Progress(func(c, t, e int64) {

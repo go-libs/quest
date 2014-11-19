@@ -26,8 +26,6 @@ type HandlerFunc func(*http.Request, *http.Response, *bytes.Buffer, error)
 type BytesHandlerFunc func(*http.Request, *http.Response, []byte, error)
 type StringHandlerFunc func(*http.Request, *http.Response, string, error)
 
-type Fields map[string]string
-
 // A Request manages communication with http service.
 type Request struct {
 	// HTTP method
@@ -127,10 +125,10 @@ func (r *Request) Form(files map[string]interface{}, fields map[string]string) *
 				fh, name, err := utils.GetFile(file)
 				if err == nil {
 					file = fh
-					fp, err = mw.CreateFormFile(fieldname, filepath.Base(name))
 				} else {
-					fp, err = mw.CreateFormField(fieldname)
+					name = fieldname
 				}
+				fp, err = mw.CreateFormFile(fieldname, filepath.Base(name))
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -310,7 +308,7 @@ func (r *Request) Do() (*bytes.Buffer, error) {
 
 	// uploading
 	if r.IsUpload {
-		var fields Fields
+		var fields map[string]string
 		if r.rawBody != nil {
 			fields, _ = r.rawBody.(map[string]string)
 		}

@@ -192,7 +192,7 @@ q.
 #### Uploading a File
 
 ```go
-q, _: = quest.Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"}, nil)
+q, _: = quest.Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"})
 q.Do()
 ```
 
@@ -200,7 +200,15 @@ q.Do()
 #### Uploading multi files and in progress
 
 ```go
-q, _ := quest.Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log", "stream2": "tmp/stream2.log"}, nil)
+stream2, _ := os.Open("tmp/stream2.log")
+stream3 := bytes.NewBufferString(`Hello Quest!`)
+data := map[string]interface{}{
+  "stream1": "tmp/stream.log",      // filepath or filename
+  "stream2": stream2,               // *os.File
+  "stream3": stream3,               // io.Reader, filename is fieldname `stream3`
+}
+
+q, _ := quest.Upload(POST, "http://httpbin.org/post", data)
 q.
   Progress(func(current, total, expected int64) {
     log.Println(current, total, expected)
