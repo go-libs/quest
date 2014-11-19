@@ -125,10 +125,5 @@ func GetFile(f interface{}) (file *os.File, name string, err error) {
 		file = nil
 		name = ""
 	}
-	if file != nil {
-		go func() {
-			file.Close()
-		}()
-	}
 	return
 }
