@@ -26,6 +26,8 @@ type HandlerFunc func(*http.Request, *http.Response, *bytes.Buffer, error)
 type BytesHandlerFunc func(*http.Request, *http.Response, []byte, error)
 type StringHandlerFunc func(*http.Request, *http.Response, string, error)
 
+type Fields map[string]string
+
 // A Request manages communication with http service.
 type Request struct {
 	// HTTP method
@@ -58,7 +60,6 @@ type Request struct {
 	// Upload
 	IsUpload bool
 	files    map[string]interface{}
-	fields   map[string]string
 
 	// Download
 	IsDownload  bool
@@ -70,11 +71,6 @@ type Request struct {
 
 func (r *Request) Files(files map[string]interface{}) *Request {
 	r.files = files
-	return r
-}
-
-func (r *Request) Fields(fields map[string]string) *Request {
-	r.fields = fields
 	return r
 }
 
@@ -123,10 +119,13 @@ func (r *Request) Form(files map[string]interface{}, fields map[string]string) *
 		//w := io.MultiWriter(pb, pw)
 		//writer := multipart.NewWriter(w)
 		go func() {
-			var fp io.Writer
+			var (
+				fp io.Writer
+				fr io.Reader
+			)
 			for fieldname, file := range files {
 				fh, name, err := utils.GetFile(file)
-				if fh != nil && err == nil {
+				if err == nil {
 					file = fh
 					fp, err = mw.CreateFormFile(fieldname, filepath.Base(name))
 				} else {
@@ -135,7 +134,8 @@ func (r *Request) Form(files map[string]interface{}, fields map[string]string) *
 				if err != nil {
 					log.Fatal(err)
 				}
-				_, err = io.Copy(fp, ioutil.NopCloser(file.(io.Reader)))
+				fr, _ = file.(io.Reader)
+				_, err = io.Copy(fp, ioutil.NopCloser(fr))
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -309,15 +309,12 @@ func (r *Request) Do() (*bytes.Buffer, error) {
 	}
 
 	// uploading
-	var hasPackBody bool
 	if r.IsUpload {
-		var fields map[string]string
+		var fields Fields
 		if r.rawBody != nil {
 			fields, _ = r.rawBody.(map[string]string)
 		}
 		r.Form(r.files, fields)
-		hasPackBody = true
-		r.packBody()
 		if r.pg != nil {
 			r.pg.Total = r.Length
 			r.Body = ioutil.NopCloser(syncreader.New(r.Body, r.pg))
@@ -325,8 +322,13 @@ func (r *Request) Do() (*bytes.Buffer, error) {
 	}
 
 	// pack body
-	if !hasPackBody {
-		r.packBody()
+	r.packBody()
+
+	if r.IsUpload {
+		if r.pg != nil {
+			r.pg.Total = r.Length
+			r.Body = ioutil.NopCloser(syncreader.New(r.Body, r.pg))
+		}
 	}
 
 	if r.Body != nil {

@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -117,9 +118,17 @@ func GetFile(f interface{}) (file *os.File, name string, err error) {
 		name = t.Name()
 		file, err = os.Open(name)
 		break
+	default:
+		err = errors.New("Not a file.")
 	}
-	if err != nil && file != nil {
-		defer file.Close()
+	if err != nil {
+		file = nil
+		name = ""
+	}
+	if file != nil {
+		go func() {
+			file.Close()
+		}()
 	}
 	return
 }
