@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/url"
+	"os"
 	"strings"
 
 	goquery "github.com/google/go-querystring/query"
@@ -96,6 +97,29 @@ func QueryString(options interface{}) (qs string, err error) {
 			return "", err
 		}
 		qs = v.Encode()
+	}
+	return
+}
+
+func GetFile(f interface{}) (file *os.File, name string, err error) {
+	switch t := f.(type) {
+	case string:
+		name = t
+		file, err = os.Open(name)
+		break
+	case *os.File:
+		var fs os.FileInfo
+		file = t
+		fs, err = t.Stat()
+		name = fs.Name()
+		break
+	case os.FileInfo:
+		name = t.Name()
+		file, err = os.Open(name)
+		break
+	}
+	if err != nil && file != nil {
+		defer file.Close()
 	}
 	return
 }

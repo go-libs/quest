@@ -45,9 +45,10 @@ type Request struct {
 	client *http.Client
 
 	// request header & body
-	Header http.Header
-	Body   io.ReadCloser
-	Length int64
+	Header  http.Header
+	Body    io.ReadCloser
+	Length  int64
+	rawBody interface{}
 
 	isBodyClosed bool
 	Buffer       *bytes.Buffer
@@ -56,7 +57,7 @@ type Request struct {
 
 	// Upload
 	IsUpload bool
-	files    map[string]string
+	files    map[string]interface{}
 	fields   map[string]string
 
 	// Download
@@ -67,7 +68,7 @@ type Request struct {
 	pg *progress.Progress
 }
 
-func (r *Request) Files(files map[string]string) *Request {
+func (r *Request) Files(files map[string]interface{}) *Request {
 	r.files = files
 	return r
 }
@@ -93,18 +94,23 @@ func (r *Request) Parameters(data interface{}) *Request {
 	if encodesParametersInURL(r.Method) {
 		return r
 	}
+	r.rawBody = data
+	return r
+}
 
-	body, length, err := utils.PackBody(data)
-
+func (r *Request) packBody() {
+	if r.rawBody == nil {
+		return
+	}
+	body, length, err := utils.PackBody(r.rawBody)
 	r.err = err
 	if length > 0 && body != nil {
 		r.Body = body
 		r.Length = length
 	}
-	return r
 }
 
-func (r *Request) Form(files, fields map[string]string) *Request {
+func (r *Request) Form(files map[string]interface{}, fields map[string]string) *Request {
 	var data interface{}
 	if len(files) > 0 {
 		var (
@@ -117,17 +123,19 @@ func (r *Request) Form(files, fields map[string]string) *Request {
 		//w := io.MultiWriter(pb, pw)
 		//writer := multipart.NewWriter(w)
 		go func() {
-			for formname, filename := range files {
-				fp, err := mw.CreateFormFile(formname, filepath.Base(filename))
+			var fp io.Writer
+			for fieldname, file := range files {
+				fh, name, err := utils.GetFile(file)
+				if fh != nil && err == nil {
+					file = fh
+					fp, err = mw.CreateFormFile(fieldname, filepath.Base(name))
+				} else {
+					fp, err = mw.CreateFormField(fieldname)
+				}
 				if err != nil {
 					log.Fatal(err)
 				}
-				fh, err := os.Open(filename)
-				defer fh.Close()
-				if err != nil {
-					log.Fatal(err)
-				}
-				_, err = io.Copy(fp, fh)
+				_, err = io.Copy(fp, ioutil.NopCloser(file.(io.Reader)))
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -154,7 +162,7 @@ func (r *Request) Form(files, fields map[string]string) *Request {
 	} else {
 		data = fields
 	}
-	r.Parameters(data)
+	r.rawBody = data
 	return r
 }
 
@@ -301,12 +309,24 @@ func (r *Request) Do() (*bytes.Buffer, error) {
 	}
 
 	// uploading
+	var hasPackBody bool
 	if r.IsUpload {
-		r.Form(r.files, r.fields)
+		var fields map[string]string
+		if r.rawBody != nil {
+			fields, _ = r.rawBody.(map[string]string)
+		}
+		r.Form(r.files, fields)
+		hasPackBody = true
+		r.packBody()
 		if r.pg != nil {
 			r.pg.Total = r.Length
 			r.Body = ioutil.NopCloser(syncreader.New(r.Body, r.pg))
 		}
+	}
+
+	// pack body
+	if !hasPackBody {
+		r.packBody()
 	}
 
 	if r.Body != nil {
@@ -355,6 +375,9 @@ func (r *Request) Do() (*bytes.Buffer, error) {
 		return nil, err
 	}
 	return r.Buffer, nil
+}
+
+func (r *Request) Pipe() {
 }
 
 func encodesParametersInURL(method Method) bool {

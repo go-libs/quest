@@ -164,7 +164,7 @@ func TestDownload(t *testing.T) {
 func TestUpload(t *testing.T) {
 	mocha.Convey("Uploading file", t, func(m mocha.C) {
 		m.Convey("Uploading one file\n", func() {
-			q, _ := Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"}, nil)
+			q, _ := Upload(POST, "http://httpbin.org/post", map[string]interface{}{"stream": "tmp/stream.log"})
 			q.
 				Progress(func(c, t, e int64) {
 				log.Println(c, t, e)
@@ -172,13 +172,18 @@ func TestUpload(t *testing.T) {
 			}).Do()
 		})
 		mocha.Convey("Uploading multi files\n", func() {
-			q, _ := Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log", "stream2": "tmp/stream2.log"}, nil)
+			stream2, _ := os.Open("tmp/stream2.log")
+			stream3 := bytes.NewBufferString(`Hello Quest!`)
+
+			q, _ := Upload(POST, "http://httpbin.org/post", map[string]interface{}{"stream": "tmp/stream.log", "stream2": stream2, "stream3": stream3})
 			q.
+				Parameters(map[string]string{"foo": "bar", "bar": "foo"}).
 				Progress(func(c, t, e int64) {
 				log.Println(c, t, e)
 				m.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
 			}).Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
 				l := int64(data.Len())
+				log.Println(data)
 				m.So(res.ContentLength, mocha.ShouldEqual, l)
 			})
 		})

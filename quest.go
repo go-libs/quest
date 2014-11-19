@@ -23,14 +23,13 @@ func Request(method Method, endpoint string) (r *req.Request, err error) {
 }
 
 // upload file / data / stream
-func Upload(method Method, endpoint string, files, fields map[string]string) (r *req.Request, err error) {
+func Upload(method Method, endpoint string, files map[string]interface{}) (r *req.Request, err error) {
 	r, err = Request(method, endpoint)
 	if err != nil {
 		return
 	}
 	r.IsUpload = true
 	r.Files(files)
-	r.Fields(fields)
 	return
 }
 
