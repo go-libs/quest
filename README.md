@@ -23,14 +23,15 @@
 import "github.com/go-libs/quest"
 import . "github.com/go-libs/methods"
 
-quest.Request(GET, "http://httpbin.org/get")
+q, err := quest.Request(GET, "http://httpbin.org/get")
 ```
 
 
 ### Response Handling
 
 ```go
-quest.Request(GET, "http://httpbin.org/get").
+q, err := quest.Request(GET, "http://httpbin.org/get")
+q.
   Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, e error) {
   log.Println(req)
   log.Println(res)
@@ -55,8 +56,8 @@ Built-in Response Methods
 #### Response String Handler
 
 ```go
-quest.Request(GET, "http://httpbin.org/get").
-  ResponseString(func(req *http.Request, res *http.Response, data string, e error) {
+q, _ := quest.Request(GET, "http://httpbin.org/get")
+q.ResponseString(func(req *http.Request, res *http.Response, data string, e error) {
   log.Println(data)
 })
 ```
@@ -70,13 +71,12 @@ type DataStruct struct {
   Origin  string
 }
 
-quest.Request(GET, "http://httpbin.org/get").
-  ResponseJSON(func(req *http.Request, res *http.Response, data DataStruct, e error) {
+q, _ := quest.Request(GET, "http://httpbin.org/get")
+q.ResponseJSON(func(req *http.Request, res *http.Response, data DataStruct, e error) {
   log.Println(data)
 })
 
-quest.Request(GET, "http://httpbin.org/get").
-  ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct, e error) {
+q.ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct, e error) {
   log.Println(data)
 })
 ```
@@ -86,7 +86,8 @@ quest.Request(GET, "http://httpbin.org/get").
 
 Response handlers can even be chained:
 ```go
-quest.Request(GET, "http://httpbin.org/get").
+q, _ := quest.Request(GET, "http://httpbin.org/get")
+q.
   ResponseString(func(req *http.Request, res *http.Response, data string, e error) {
   log.Println(data)
 }).
@@ -110,8 +111,8 @@ type Options struct {
   Foo string `url:"foo"`
 }
 
-quest.Request(GET, "http://httpbin.org/get").
-  Query(Options{"bar"})
+q, _ := quest.Request(GET, "http://httpbin.org/get")
+q.Query(Options{"bar"})
 // http://httpbin.org/get?foo=bar
 ```
 
@@ -140,12 +141,12 @@ type OtherDataStruct struct {
   Origin  string
 }
 
-quest.Request(POST, "http://httpbin.org/post").
-  Encoding("JSON").
+q, _ := quest.Request(POST, "http://httpbin.org/post")
+q.Encoding("JSON").
   Parameters(&parameters).
   ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct, e error) {
   log.Println(data)
-})
+}).
   ResponseJSON(func(req *http.Request, res *http.Response, data OtherDataStruct, e error) {
   log.Println(data)
 })
@@ -159,7 +160,8 @@ quest.Request(POST, "http://httpbin.org/post").
 #### Downloading a File
 
 ```go
-quest.Download(GET, "http://httpbin.org/stream/100", "stream.log").Do()
+q, _ := quest.Download(GET, "http://httpbin.org/stream/100", "stream.log")
+q.Do()
 ```
 
 
@@ -167,13 +169,15 @@ quest.Download(GET, "http://httpbin.org/stream/100", "stream.log").Do()
 
 ```go
 destination := "tmp/stream.log"
-quest.Download(GET, "http://httpbin.org/bytes/1024", destination).
+q, _ := quest.Download(GET, "http://httpbin.org/bytes/1024", destination)
+q.
   Progress(func(bytesRead, totalBytesRead, totalBytesExpectedToRead int64) {
     log.Println(bytesRead, totalBytesRead, totalBytesExpectedToRead)
   }).Do()
 
 destination := "tmp/stream2.log"
-quest.Download(GET, "http://httpbin.org/bytes/10240", destination).
+q, _ := quest.Download(GET, "http://httpbin.org/bytes/10240", destination)
+q.
   Progress(func(current, total, expected int64) {
     log.Println(current, total, expected)
   }).Response(func(request *http.Request, response *http.Response, data *bytes.Buffer, err error) {
@@ -188,14 +192,16 @@ quest.Download(GET, "http://httpbin.org/bytes/10240", destination).
 #### Uploading a File
 
 ```go
-quest.Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"}, nil).Do()
+q, _: = quest.Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"}, nil)
+q.Do()
 ```
 
 
 #### Uploading multi files and in progress
 
 ```go
-quest.Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log", "stream2": "tmp/stream2.log"}, nil).
+q, _ := quest.Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log", "stream2": "tmp/stream2.log"}, nil)
+q.
   Progress(func(current, total, expected int64) {
     log.Println(current, total, expected)
   }).Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {

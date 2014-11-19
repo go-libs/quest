@@ -14,8 +14,7 @@ import (
 )
 
 func TestMakeARequest(t *testing.T) {
-	q := Request(GET, "http://httpbin.org/get")
-
+	q, _ := Request(GET, "http://httpbin.org/get")
 	mocha.Convey("Should be making a Request", t, func() {
 		mocha.So(q.Method, mocha.ShouldEqual, GET)
 	})
@@ -27,7 +26,8 @@ func TestResponseHandling(t *testing.T) {
 	queryParams.Set("name", "活力")
 
 	mocha.Convey("Query, query string", t, func() {
-		Request(GET, "http://httpbin.org/get").
+		q, _ := Request(GET, "http://httpbin.org/get")
+		q.
 			Query(&queryParams).
 			Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
 			mocha.So(req.URL.String(), mocha.ShouldEqual, "http://httpbin.org/get?foo=bar&name=%E6%B4%BB%E5%8A%9B")
@@ -35,7 +35,8 @@ func TestResponseHandling(t *testing.T) {
 	})
 
 	mocha.Convey("Parameters, ContentLength should equal to buffer length", t, func() {
-		Request(POST, "http://httpbin.org/post").
+		q, _ := Request(POST, "http://httpbin.org/post")
+		q.
 			Parameters(queryParams).
 			Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
 			mocha.So(res.ContentLength, mocha.ShouldEqual, int64(data.Len()))
@@ -57,7 +58,8 @@ func TestResponseHandling(t *testing.T) {
 	}
 
 	mocha.Convey("Response JSON", t, func() {
-		Request(POST, "http://httpbin.org/post").
+		q, _ := Request(POST, "http://httpbin.org/post")
+		q.
 			Encoding("JSON").
 			Parameters(parameters).
 			ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct, e error) {
@@ -98,7 +100,8 @@ func TestResponseHandling(t *testing.T) {
 	}
 
 	mocha.Convey("Response JSON, using JSON decode", t, func() {
-		Request(POST, "http://httpbin.org/post").
+		q, _ := Request(POST, "http://httpbin.org/post")
+		q.
 			Encoding("JSON").
 			Parameters(parameters2).
 			ResponseJSON(func(req *http.Request, res *http.Response, data DataStruct4, e error) {
@@ -120,7 +123,8 @@ func TestResponseHandling(t *testing.T) {
 		}
 
 		// http://httpbin.org/get
-		Request(GET, "http://httpbin.org/get").
+		q, _ := Request(GET, "http://httpbin.org/get")
+		q.
 			Query(Options{"bar", []int{233, 377, 610}}).
 			Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
 			mocha.So(req.URL.String(), mocha.ShouldEqual, "http://httpbin.org/get?baz=233&baz=377&baz=610&foo=bar")
@@ -133,7 +137,8 @@ func TestDownload(t *testing.T) {
 
 	mocha.Convey("Downloading file", t, func() {
 		mocha.Convey("Downloading stream.log in progress\n", func() {
-			Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log").
+			q, _ := Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log")
+			q.
 				Progress(func(c, t, e int64) {
 				log.Println(c, t, e)
 				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
@@ -141,7 +146,8 @@ func TestDownload(t *testing.T) {
 		})
 		mocha.Convey("Downloading stream2.log in progress and invoke response handler\n", func() {
 			var n int64
-			Download(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log").
+			q, _ := Download(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log")
+			q.
 				Progress(func(c, t, e int64) {
 				n = c
 				log.Println(c, t, e)
@@ -158,14 +164,16 @@ func TestDownload(t *testing.T) {
 func TestUpload(t *testing.T) {
 	mocha.Convey("Uploading file", t, func(m mocha.C) {
 		m.Convey("Uploading one file\n", func() {
-			Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"}, nil).
+			q, _ := Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log"}, nil)
+			q.
 				Progress(func(c, t, e int64) {
 				log.Println(c, t, e)
 				m.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
 			}).Do()
 		})
 		mocha.Convey("Uploading multi files\n", func() {
-			Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log", "stream2": "tmp/stream2.log"}, nil).
+			q, _ := Upload(POST, "http://httpbin.org/post", map[string]string{"stream": "tmp/stream.log", "stream2": "tmp/stream2.log"}, nil)
+			q.
 				Progress(func(c, t, e int64) {
 				log.Println(c, t, e)
 				m.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
