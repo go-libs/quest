@@ -34,7 +34,7 @@ func Upload(method Method, endpoint string, files map[string]interface{}) (r *re
 }
 
 // download file / data / stream to file
-func Download(method Method, endpoint, destination string) (r *req.Request, err error) {
+func Download(method Method, endpoint string, destination interface{}) (r *req.Request, err error) {
 	r, err = Request(method, endpoint)
 	if err != nil {
 		return

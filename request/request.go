@@ -61,7 +61,7 @@ type Request struct {
 
 	// Download
 	IsDownload  bool
-	destination string
+	destination interface{}
 
 	// Progress
 	pg *progress.Progress
@@ -72,7 +72,7 @@ func (r *Request) Files(files map[string]interface{}) *Request {
 	return r
 }
 
-func (r *Request) Destionation(destination string) *Request {
+func (r *Request) Destionation(destination interface{}) *Request {
 	r.destination = destination
 	return r
 }
@@ -306,7 +306,7 @@ func (r *Request) Do() (*bytes.Buffer, error) {
 		Header: r.Header,
 	}
 
-	// uploading
+	// uploading before
 	if r.IsUpload {
 		var fields map[string]string
 		if r.rawBody != nil {
@@ -318,6 +318,7 @@ func (r *Request) Do() (*bytes.Buffer, error) {
 	// pack body
 	r.packBody()
 
+	// uploading after
 	if r.IsUpload {
 		if r.pg != nil {
 			r.pg.Total = r.Length
@@ -348,19 +349,27 @@ func (r *Request) Do() (*bytes.Buffer, error) {
 
 	// downloading
 	if r.IsDownload {
-		p, err := filepath.Abs(r.destination)
-		if err != nil {
-			return nil, err
-		}
-		f, err := os.Create(p)
-		defer f.Close()
-		if err != nil {
-			return nil, err
+		var fw io.Writer
+		switch t := r.destination.(type) {
+		case string:
+			p, err := filepath.Abs(t)
+			if err != nil {
+				return nil, err
+			}
+			f, err := os.Create(p)
+			defer f.Close()
+			if err != nil {
+				return nil, err
+			}
+			fw = f
+			break
+		default:
+			fw, _ = t.(io.Writer)
 		}
 		if r.pg != nil {
 			r.pg.Total = res.ContentLength
 		}
-		dw = io.MultiWriter(dw, r.pg, f)
+		dw = io.MultiWriter(dw, r.pg, fw)
 		if err != nil {
 			return nil, err
 		}

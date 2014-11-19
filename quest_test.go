@@ -146,7 +146,8 @@ func TestDownload(t *testing.T) {
 		})
 		mocha.Convey("Downloading stream2.log in progress and invoke response handler\n", func() {
 			var n int64
-			q, _ := Download(GET, "http://httpbin.org/bytes/10240", "tmp/stream2.log")
+			stream2, _ := os.Create("tmp/stream2.log")
+			q, _ := Download(GET, "http://httpbin.org/bytes/10240", stream2)
 			q.
 				Progress(func(c, t, e int64) {
 				n = c

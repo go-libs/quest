@@ -175,7 +175,7 @@ q.
     log.Println(bytesRead, totalBytesRead, totalBytesExpectedToRead)
   }).Do()
 
-destination := "tmp/stream2.log"
+destination, _ := os.Create("tmp/stream2.log")
 q, _ := quest.Download(GET, "http://httpbin.org/bytes/10240", destination)
 q.
   Progress(func(current, total, expected int64) {
@@ -189,6 +189,13 @@ q.
 ### Uploading
 
 
+#### Supported Upload Types
+
+* File
+* Data
+* Stream
+
+
 #### Uploading a File
 
 ```go
@@ -197,7 +204,7 @@ q.Do()
 ```
 
 
-#### Uploading multi files and in progress
+#### Uploading multi files w/Progress
 
 ```go
 stream2, _ := os.Open("tmp/stream2.log")
