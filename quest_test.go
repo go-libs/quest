@@ -175,12 +175,12 @@ func TestUpload(t *testing.T) {
 			}).Do()
 		})
 		mocha.Convey("Uploading multi files\n", func() {
-			stream2, _ := os.Open("tmp/stream2.log")
+			stream2, _ := os.Open("quest_test.go")
 			stream3 := bytes.NewBufferString(`Hello Quest!`)
 			data := map[string]interface{}{
-				"stream1": "tmp/stream.log", // filepath or filename
-				"stream2": stream2,          // *os.File
-				"stream3": stream3,          // io.Reader, filename is fieldname `stream3`
+				"stream1": "quest.go", // filepath or filename
+				"stream2": stream2,    // *os.File
+				"stream3": stream3,    // io.Reader, filename is fieldname `stream3`
 			}
 
 			q, _ := Upload(POST, "http://httpbin.org/post", data)
