@@ -17,7 +17,7 @@
 - [ ] Download Resume data
 - [ ] More Errors Output
 - [ ] HTTP Response Validation
-- [ ] Authentication with NSURLCredential
+- [ ] Authentication
 - [ ] cURL Debug Output
 - [ ] Comprehensive Unit Test Coverage
 - [ ] Complete Documentation
