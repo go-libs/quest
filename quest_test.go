@@ -8,8 +8,6 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/go-libs/methods"
-
 	mocha "github.com/smartystreets/goconvey/convey"
 )
 

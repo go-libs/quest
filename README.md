@@ -110,7 +110,17 @@ q.
 ### HTTP Methods
 
 ```go
-import . "github.com/go-libs/methods"
+const (
+	OPTIONS Method = iota
+	GET
+	HEAD
+	POST
+	PUT
+	PATCH
+	DELETE
+	TRACE
+	CONNECT
+)
 ```
 
 

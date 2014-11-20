@@ -3,17 +3,14 @@ package quest
 import (
 	"net/http"
 	stdurl "net/url"
-
-	. "github.com/go-libs/methods"
-	req "github.com/go-libs/quest/request"
 )
 
-func Request(method Method, endpoint string) (r *req.Request, err error) {
+func Request(method Method, endpoint string) (r *Requester, err error) {
 	url, err := stdurl.ParseRequestURI(endpoint)
 	if err != nil {
 		return nil, err
 	}
-	r = &req.Request{
+	r = &Requester{
 		Method:   method,
 		Endpoint: endpoint,
 		Url:      url,
@@ -23,7 +20,7 @@ func Request(method Method, endpoint string) (r *req.Request, err error) {
 }
 
 // upload file / data / stream
-func Upload(method Method, endpoint string, files map[string]interface{}) (r *req.Request, err error) {
+func Upload(method Method, endpoint string, files map[string]interface{}) (r *Requester, err error) {
 	r, err = Request(method, endpoint)
 	if err != nil {
 		return
@@ -34,7 +31,7 @@ func Upload(method Method, endpoint string, files map[string]interface{}) (r *re
 }
 
 // download file / data / stream to file
-func Download(method Method, endpoint string, destination interface{}) (r *req.Request, err error) {
+func Download(method Method, endpoint string, destination interface{}) (r *Requester, err error) {
 	r, err = Request(method, endpoint)
 	if err != nil {
 		return
