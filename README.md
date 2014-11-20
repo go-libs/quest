@@ -12,6 +12,16 @@
 - [x] Chainable Request / Response methods
 - [x] URL / JSON / Parameter Encoding
 - [x] Progress Tracking
+- [x] Upload File / Data / Stream
+- [x] Download using Request
+- [] Download Resume data
+- [] More Errors Output
+- [] HTTP Response Validation
+- [] Authentication with NSURLCredential
+- [] cURL Debug Output
+- [] Comprehensive Unit Test Coverage
+- [] Complete Documentation
+
 
 
 ## Usage
