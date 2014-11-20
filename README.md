@@ -4,7 +4,7 @@
 [![GoDoc][godoc-image]][godoc-url]
 
 
-**quest** is an HTTP networking library written in Go.
+**quest** is an elegant HTTP networking library written in Go.
 
 
 ## Features
