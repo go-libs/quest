@@ -42,12 +42,13 @@ type Requester struct {
 	// HTTP client
 	client *http.Client
 
-	// request header & body
+	// request header, body
 	Header  http.Header
 	Body    io.ReadCloser
 	Length  int64
 	rawBody interface{}
 
+	// response body, buffer
 	isBodyClosed bool
 	Buffer       *bytes.Buffer
 

@@ -5,6 +5,7 @@ import (
 	stdurl "net/url"
 )
 
+// base request client
 func Request(method Method, endpoint string) (r *Requester, err error) {
 	url, err := stdurl.ParseRequestURI(endpoint)
 	if err != nil {
