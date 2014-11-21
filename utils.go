@@ -70,6 +70,9 @@ func packBody(data interface{}) (rc io.ReadCloser, n int64, err error) {
 	case *strings.Reader:
 		rc, n = packBodyByStringsReader(t)
 		return
+	case *io.PipeReader:
+		rc, n = packBodyByPipeReader(t)
+		return
 	// JSON Object
 	default:
 		b, err := json.Marshal(data)
@@ -81,13 +84,13 @@ func packBody(data interface{}) (rc io.ReadCloser, n int64, err error) {
 	return
 }
 
-func queryString(options interface{}) (qs string, err error) {
+func QueryString(options interface{}) (qs string, err error) {
 	switch t := options.(type) {
 	case string:
-		qs = t
+		qs = url.QueryEscape(t)
 		return
 	case []byte:
-		qs = string(t)
+		qs = url.QueryEscape(string(t))
 		return
 	case *url.Values:
 		qs = t.Encode()

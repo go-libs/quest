@@ -77,7 +77,7 @@ func (r *Requester) Destination(destination interface{}) *Requester {
 }
 
 func (r *Requester) Query(data interface{}) *Requester {
-	qs, err := queryString(data)
+	qs, err := QueryString(data)
 	r.err = err
 	r.Url.RawQuery = qs
 	return r
@@ -85,6 +85,7 @@ func (r *Requester) Query(data interface{}) *Requester {
 
 func (r *Requester) Parameters(data interface{}) *Requester {
 	if encodesParametersInURL(r.Method) {
+		r.err = errors.New("Must be a `GET` method.")
 		return r
 	}
 	r.rawBody = data
@@ -106,15 +107,8 @@ func (r *Requester) packBody() {
 func (r *Requester) Form(files map[string]interface{}, fields map[string]string) *Requester {
 	var data interface{}
 	if len(files) > 0 {
-		var (
-			c  = make(chan bool, 1)
-			b  = new(bytes.Buffer)
-			mw = multipart.NewWriter(b)
-		)
-		//pr, pw := io.Pipe()
-		//pb := &ProgressBar{Progress: func(c, t, e int64) {}}
-		//w := io.MultiWriter(pb, pw)
-		//writer := multipart.NewWriter(w)
+		pr, pw := io.Pipe()
+		mw := multipart.NewWriter(pw)
 		go func() {
 			var (
 				fp io.Writer
@@ -142,20 +136,10 @@ func (r *Requester) Form(files map[string]interface{}, fields map[string]string)
 				mw.WriteField(k, v)
 			}
 			mw.Close()
-			//pw.Close()
-			c <- true
+			pw.Close()
 		}()
-		<-c
-		//ppr := progress.NewReader()
-		////ppr.Total = <-cc
-		//ppr.Progress = func(c, t, e int64) {
-		//	log.Println("Uploading stream", c, t, e)
-		//}
-		//rr := syncreader.New(pr, ppr)
-		//log.Println(buff.Len())
-		//body, length := PackBodyByReader(pr)
 		r.Header.Set("Content-Type", mw.FormDataContentType())
-		data = b
+		data = pr
 	} else {
 		data = fields
 	}
