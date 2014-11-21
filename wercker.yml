@@ -1,4 +1,0 @@
-box: wercker/golang
-build:
-  steps:
-    - go test -v ./...
