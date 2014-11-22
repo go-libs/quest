@@ -36,17 +36,16 @@ type Requester struct {
 	// HTTP request
 	req *http.Request
 
+	Header  http.Header
+	Body    io.ReadCloser
+	Length  int64
+	rawBody interface{}
+
 	// HTTP response
 	res *http.Response
 
 	// HTTP client
 	client *http.Client
-
-	// request header, body
-	Header  http.Header
-	Body    io.ReadCloser
-	Length  int64
-	rawBody interface{}
 
 	// response body, buffer
 	isBodyClosed bool
@@ -64,6 +63,10 @@ type Requester struct {
 
 	// Progress
 	pg *progress.Progress
+
+	// Authenticate
+	isSetBasicAuth     bool
+	username, password string
 }
 
 func (r *Requester) Files(files map[string]interface{}) *Requester {
@@ -159,6 +162,9 @@ func (r *Requester) Encoding(t string) *Requester {
 }
 
 func (r *Requester) Authenticate(username, password string) *Requester {
+	r.isSetBasicAuth = true
+	r.username = username
+	r.password = password
 	return r
 }
 
@@ -283,10 +289,15 @@ func (r *Requester) ValidateStatusCode(statusCodes ...int) *Requester {
 func (r *Requester) Cancel() {}
 
 func (r *Requester) Do() (*bytes.Buffer, error) {
+	// lazy create request
 	r.req = &http.Request{
 		Method: r.Method.String(),
 		URL:    r.Url,
 		Header: r.Header,
+	}
+
+	if r.isSetBasicAuth {
+		r.req.SetBasicAuth(r.username, r.password)
 	}
 
 	// uploading before

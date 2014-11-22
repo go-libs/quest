@@ -190,9 +190,30 @@ func TestUpload(t *testing.T) {
 				m.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
 			}).Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
 				l := int64(data.Len())
-				log.Println(data)
 				m.So(res.ContentLength, mocha.ShouldEqual, l)
 			})
+		})
+	})
+}
+
+func TestAuthenticate(t *testing.T) {
+	type Auth struct {
+		User          string
+		Passwd        string
+		Authenticated bool
+	}
+	user := "user"
+	passwd := "password"
+
+	mocha.Convey("Authenticate", t, func() {
+		mocha.Convey("Basic Auth", func() {
+			q, _ := Request(GET, "https://httpbin.org/basic-auth/"+user+"/"+passwd)
+			q.Authenticate(user, passwd).
+				ResponseJSON(func(_ *http.Request, _ *http.Response, data Auth, _ error) {
+				mocha.So(data.User, mocha.ShouldEqual, user)
+				mocha.So(data.Authenticated, mocha.ShouldEqual, true)
+			}).
+				Do()
 		})
 	})
 }

@@ -244,6 +244,28 @@ q.
 ```
 
 
+### Authenticate
+
+#### HTTP Basic Authentication
+
+```go
+type Auth struct {
+  User          string
+  Passwd        string
+  Authenticated bool
+}
+user := "user"
+passwd := "password"
+
+q, _ := quest.Request(quest.GET, "https://httpbin.org/basic-auth/"+user+"/"+passwd)
+q.Authenticate(user, passwd).
+  ResponseJSON(func(_ *http.Request, _ *http.Response, data Auth, _ error) {
+  log.Println(data)
+}).
+  Do()
+```
+
+
 ## License
 
 MIT
