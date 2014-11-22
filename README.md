@@ -14,10 +14,10 @@
 - [x] Progress Tracking
 - [x] Upload File / Data / Stream
 - [x] Download using Request
+- [x] Authentication
 - [ ] Download Resume data
 - [ ] More Errors Output
 - [ ] HTTP Response Validation
-- [ ] Authentication
 - [ ] cURL Debug Output
 - [ ] Comprehensive Unit Test Coverage
 - [ ] Complete Documentation
