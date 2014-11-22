@@ -63,10 +63,6 @@ type Requester struct {
 
 	// Progress
 	pg *progress.Progress
-
-	// Authenticate
-	isSetBasicAuth     bool
-	username, password string
 }
 
 func (r *Requester) Files(files map[string]interface{}) *Requester {
@@ -162,9 +158,7 @@ func (r *Requester) Encoding(t string) *Requester {
 }
 
 func (r *Requester) Authenticate(username, password string) *Requester {
-	r.isSetBasicAuth = true
-	r.username = username
-	r.password = password
+	r.Url.User = url.UserPassword(username, password)
 	return r
 }
 
@@ -294,10 +288,6 @@ func (r *Requester) Do() (*bytes.Buffer, error) {
 		Method: r.Method.String(),
 		URL:    r.Url,
 		Header: r.Header,
-	}
-
-	if r.isSetBasicAuth {
-		r.req.SetBasicAuth(r.username, r.password)
 	}
 
 	// uploading before
