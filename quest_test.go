@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"testing"
+	"time"
 
 	mocha "github.com/smartystreets/goconvey/convey"
 )
@@ -212,8 +213,22 @@ func TestAuthenticate(t *testing.T) {
 				ResponseJSON(func(_ *http.Request, _ *http.Response, data Auth, _ error) {
 				mocha.So(data.User, mocha.ShouldEqual, user)
 				mocha.So(data.Authenticated, mocha.ShouldEqual, true)
-			}).
-				Do()
+			}).Do()
+		})
+	})
+}
+
+func TestTimeout(t *testing.T) {
+	mocha.Convey("Timeout", t, func() {
+		mocha.Convey("It's timeout.", func() {
+			s := time.Duration(3 * time.Second)
+			q, _ := Request(GET, "https://httpbin.org/delay/5")
+			q.Timeout(s).Do()
+		})
+		mocha.Convey("It's not timeout.", func() {
+			s := time.Duration(30 * time.Second)
+			q, _ := Request(GET, "https://httpbin.org/delay/5")
+			q.Timeout(s).Do()
 		})
 	})
 }

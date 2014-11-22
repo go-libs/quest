@@ -15,6 +15,7 @@
 - [x] Upload File / Data / Stream
 - [x] Download using Request
 - [x] Authentication
+- [x] Timeout
 - [ ] Download Resume data
 - [ ] More Errors Output
 - [ ] HTTP Response Validation
@@ -265,6 +266,14 @@ q.Authenticate(user, passwd).
   Do()
 ```
 
+
+### Timeout
+
+```go
+s := time.Duration(3 * time.Second)
+q, _ := quest.Request(quest.GET, "https://httpbin.org/delay/5")
+q.Timeout(s).Do()
+```
 
 ## License
 

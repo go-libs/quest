@@ -15,6 +15,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-libs/progress"
 	"github.com/go-libs/syncreader"
@@ -33,6 +34,9 @@ type Requester struct {
 	Endpoint string
 	Url      *url.URL
 
+	// HTTP client
+	client *http.Client
+
 	// HTTP request
 	req *http.Request
 
@@ -43,9 +47,6 @@ type Requester struct {
 
 	// HTTP response
 	res *http.Response
-
-	// HTTP client
-	client *http.Client
 
 	// response body, buffer
 	isBodyClosed bool
@@ -63,6 +64,8 @@ type Requester struct {
 
 	// Progress
 	pg *progress.Progress
+
+	timeout time.Duration
 }
 
 func (r *Requester) Files(files map[string]interface{}) *Requester {
@@ -75,6 +78,11 @@ func (r *Requester) Destination(destination interface{}) *Requester {
 	return r
 }
 
+func (r *Requester) Timeout(t time.Duration) *Requester {
+	r.timeout = t
+	return r
+}
+
 func (r *Requester) Query(data interface{}) *Requester {
 	qs, err := QueryString(data)
 	r.err = err
@@ -84,7 +92,7 @@ func (r *Requester) Query(data interface{}) *Requester {
 
 func (r *Requester) Parameters(data interface{}) *Requester {
 	if encodesParametersInURL(r.Method) {
-		r.err = errors.New("Must be a `GET` method.")
+		r.err = errors.New("Must be not GET, HEAD, DELETE methodx.")
 		return r
 	}
 	r.rawBody = data
@@ -320,12 +328,12 @@ func (r *Requester) Do() (*bytes.Buffer, error) {
 		}
 	}
 
-	r.client = &http.Client{}
+	r.client = &http.Client{Timeout: r.timeout}
 	res, err := r.client.Do(r.req)
-	defer res.Body.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	r.res = res
 	r.Buffer = new(bytes.Buffer)
