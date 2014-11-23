@@ -92,7 +92,7 @@ func (r *Requester) Query(data interface{}) *Requester {
 
 func (r *Requester) Parameters(data interface{}) *Requester {
 	if encodesParametersInURL(r.Method) {
-		r.err = errors.New("Must be not GET, HEAD, DELETE methodx.")
+		r.err = errors.New("Must be not GET, HEAD, DELETE methods.")
 		return r
 	}
 	r.rawBody = data

@@ -262,8 +262,7 @@ q, _ := quest.Request(quest.GET, "https://httpbin.org/basic-auth/"+user+"/"+pass
 q.Authenticate(user, passwd).
   ResponseJSON(func(_ *http.Request, _ *http.Response, data Auth, _ error) {
   log.Println(data)
-}).
-  Do()
+}).Do()
 ```
 
 
