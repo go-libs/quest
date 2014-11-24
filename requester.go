@@ -21,6 +21,8 @@ import (
 	"github.com/go-libs/syncreader"
 )
 
+var defaultTimeout = 30 * time.Second
+
 type HandlerFunc func(*http.Request, *http.Response, *bytes.Buffer, error)
 type BytesHandlerFunc func(*http.Request, *http.Response, []byte, error)
 type StringHandlerFunc func(*http.Request, *http.Response, string, error)

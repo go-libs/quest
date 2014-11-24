@@ -16,6 +16,7 @@ func Request(method Method, endpoint string) (r *Requester, err error) {
 		Endpoint: endpoint,
 		Url:      url,
 		Header:   make(http.Header),
+		timeout:  defaultTimeout,
 	}
 	return
 }
