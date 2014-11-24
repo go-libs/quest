@@ -15,7 +15,8 @@
 - [x] Upload File / Data / Stream
 - [x] Download using Request
 - [x] Authentication
-- [x] Timeout
+- [x] Timeout, defaults to 30 * time.Second
+- [] Pipe Stream, other request
 - [ ] Download Resume data
 - [ ] More Errors Output
 - [ ] HTTP Response Validation
