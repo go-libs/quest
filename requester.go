@@ -313,11 +313,9 @@ func (r *Requester) Do() (*bytes.Buffer, error) {
 	r.packBody()
 
 	// uploading after
-	if r.IsUpload {
-		if r.pg != nil {
-			r.pg.Total = r.Length
-			r.Body = ioutil.NopCloser(syncreader.New(r.Body, r.pg))
-		}
+	if r.IsUpload && r.pg != nil {
+		r.pg.Total = r.Length
+		r.Body = ioutil.NopCloser(syncreader.New(r.Body, r.pg))
 	}
 
 	if r.Body != nil {
