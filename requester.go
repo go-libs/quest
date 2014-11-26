@@ -302,10 +302,7 @@ func (r *Requester) Do() (*bytes.Buffer, error) {
 
 	// uploading before
 	if r.IsUpload {
-		var fields map[string]string
-		if r.rawBody != nil {
-			fields, _ = r.rawBody.(map[string]string)
-		}
+		fields, _ := r.rawBody.(map[string]string)
 		r.Form(r.files, fields)
 	}
 
