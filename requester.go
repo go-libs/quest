@@ -23,6 +23,10 @@ import (
 
 var defaultTimeout = 30 * time.Second
 
+type canceler interface {
+	CancelRequest(*http.Request)
+}
+
 type HandlerFunc func(*http.Request, *http.Response, *bytes.Buffer, error)
 type BytesHandlerFunc func(*http.Request, *http.Response, []byte, error)
 type StringHandlerFunc func(*http.Request, *http.Response, string, error)
@@ -94,7 +98,7 @@ func (r *Requester) Query(data interface{}) *Requester {
 
 func (r *Requester) Parameters(data interface{}) *Requester {
 	if encodesParametersInURL(r.Method) {
-		r.err = errors.New("Must be not GET, HEAD, DELETE methods.")
+		r.err = errors.New("Must not be GET, HEAD, DELETE methods.")
 		return r
 	}
 	r.rawBody = data
@@ -378,7 +382,6 @@ func encodesParametersInURL(method Method) bool {
 	switch method {
 	case GET, HEAD, DELETE:
 		return true
-	default:
-		return false
 	}
+	return false
 }
