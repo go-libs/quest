@@ -320,8 +320,8 @@ func (r *Requester) Do() (*bytes.Buffer, error) {
 	}
 
 	if r.Body != nil {
-		if r.req.Header.Get("Content-Type") == "" {
-			r.req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		if r.Header.Get("Content-Type") == "" {
+			r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		}
 		r.req.Body = r.Body
 		if r.Length > 0 {
