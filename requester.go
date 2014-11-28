@@ -23,10 +23,6 @@ import (
 
 var defaultTimeout = 30 * time.Second
 
-type canceler interface {
-	CancelRequest(*http.Request)
-}
-
 type HandlerFunc func(*http.Request, *http.Response, *bytes.Buffer, error)
 type BytesHandlerFunc func(*http.Request, *http.Response, []byte, error)
 type StringHandlerFunc func(*http.Request, *http.Response, string, error)
@@ -71,7 +67,8 @@ type Requester struct {
 	// Progress
 	pg *progress.Progress
 
-	timeout time.Duration
+	transport *http.Transport
+	timeout   time.Duration
 }
 
 func (r *Requester) Files(files map[string]interface{}) *Requester {
@@ -294,8 +291,6 @@ func (r *Requester) ValidateStatusCode(statusCodes ...int) *Requester {
 	return r
 }
 
-func (r *Requester) Cancel() {}
-
 func (r *Requester) Do() (*bytes.Buffer, error) {
 	// lazy create request
 	r.req = &http.Request{
@@ -329,7 +324,8 @@ func (r *Requester) Do() (*bytes.Buffer, error) {
 		}
 	}
 
-	r.client = &http.Client{Timeout: r.timeout}
+	r.transport = new(http.Transport)
+	r.client = &http.Client{Transport: r.transport, Timeout: r.timeout}
 	res, err := r.client.Do(r.req)
 	if err != nil {
 		return nil, err
@@ -373,6 +369,12 @@ func (r *Requester) Do() (*bytes.Buffer, error) {
 		return nil, err
 	}
 	return r.Buffer, nil
+}
+
+func (r *Requester) Cancel() {
+	if r.client != nil {
+		r.client.Transport.(*http.Transport).CancelRequest(r.req)
+	}
 }
 
 func (r *Requester) Pipe() {
