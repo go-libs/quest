@@ -289,7 +289,7 @@ c.Name = "k"
 c.Value = "v"
 q, _ := Request(GET, "http://httpbin.org/cookies")
 q.Query(&queryParams)
-q.Cookie(c1)
+q.Cookie(c)
 log.Println(q.DebugPrintln())
 ```
 
