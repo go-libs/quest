@@ -16,11 +16,11 @@
 - [x] Download using Request
 - [x] Authentication
 - [x] Timeout, defaults to 30 * time.Second
+- [x] cURL Debug Output
 - [ ] Pipe Stream to other request
 - [ ] Download Resume data
 - [ ] More Errors Output
 - [ ] HTTP Response Validation
-- [ ] cURL Debug Output
 - [ ] Comprehensive Unit Test Coverage
 - [ ] Complete Documentation
 
@@ -274,6 +274,25 @@ s := time.Duration(3 * time.Second)
 q, _ := quest.Request(quest.GET, "https://httpbin.org/delay/5")
 q.Timeout(s).Do()
 ```
+
+
+### Println & DebugPrintln Request
+
+```go
+q, _ := Request(GET, "http://httpbin.org/cookies")
+log.Println(q.Println())
+```
+
+```go
+c := &http.Cookie{}
+c.Name = "k"
+c.Value = "v"
+q, _ := Request(GET, "http://httpbin.org/cookies")
+q.Query(&queryParams)
+q.Cookie(c1)
+log.Println(q.DebugPrintln())
+```
+
 
 ## License
 

@@ -64,6 +64,9 @@ type Requester struct {
 	IsDownload  bool
 	destination interface{}
 
+	// Cookies
+	cookies []*http.Cookie
+
 	// Progress
 	pg *progress.Progress
 
@@ -170,6 +173,11 @@ func (r *Requester) Encoding(t string) *Requester {
 
 func (r *Requester) Authenticate(username, password string) *Requester {
 	r.Url.User = url.UserPassword(username, password)
+	return r
+}
+
+func (r *Requester) Cookie(cookies ...*http.Cookie) *Requester {
+	r.cookies = cookies
 	return r
 }
 
@@ -305,6 +313,12 @@ func (r *Requester) Do() (*bytes.Buffer, error) {
 		r.Form(r.files, fields)
 	}
 
+	if len(r.cookies) > 0 {
+		for _, c := range r.cookies {
+			r.req.AddCookie(c)
+		}
+	}
+
 	// pack body
 	r.packBody()
 
@@ -387,7 +401,38 @@ func (r *Requester) Println() string {
 	return strings.Join(s, " ")
 }
 
-func (r *Requester) DebugPrintln() {
+func (r *Requester) DebugPrintln() string {
+	s := []string{"$ curl -i"}
+
+	if r.Method != GET {
+		s = append(s, "-X "+r.Method.String())
+	}
+
+	if r.Url.User != nil {
+		s = append(s, "-u "+r.Url.User.String())
+	}
+
+	if len(r.cookies) > 0 {
+		var cs []string
+		for _, c := range r.cookies {
+			cs = append(cs, c.String())
+		}
+		s = append(s, "-b "+strconv.Quote(strings.Join(cs, "; ")))
+	}
+
+	for field, _ := range r.Header {
+		s = append(s, "-H "+field+": "+r.Header.Get(field))
+	}
+
+	if body, _, err := packBody(r.rawBody); err == nil && body != nil {
+		b := new(bytes.Buffer)
+		io.Copy(b, body)
+		s = append(s, "-d "+strconv.Quote(b.String()))
+	}
+
+	s = append(s, strconv.Quote(r.Url.String()))
+
+	return strings.Join(s, " \\\n\t")
 }
 
 func (r *Requester) Pipe() {

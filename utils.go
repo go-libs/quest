@@ -52,6 +52,8 @@ func packBodyByStringsReader(b *strings.Reader) (io.ReadCloser, int64) {
 // Pack Request's body to io.ReadCloser.
 func packBody(data interface{}) (rc io.ReadCloser, n int64, err error) {
 	switch t := data.(type) {
+	case nil:
+		return
 	case string:
 		rc, n = packBodyByString(t)
 		return
