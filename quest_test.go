@@ -9,13 +9,13 @@ import (
 	"testing"
 	"time"
 
-	mocha "github.com/smartystreets/goconvey/convey"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestMakeARequest(t *testing.T) {
 	q, _ := Request(GET, "http://httpbin.org/get")
-	mocha.Convey("Should be making a Request", t, func() {
-		mocha.So(q.Method, mocha.ShouldEqual, GET)
+	Convey("Should be making a Request", t, func() {
+		So(q.Method, ShouldEqual, GET)
 	})
 }
 
@@ -24,21 +24,21 @@ func TestResponseHandling(t *testing.T) {
 	queryParams.Set("foo", "bar")
 	queryParams.Set("name", "活力")
 
-	mocha.Convey("Query, query string", t, func() {
+	Convey("Query, query string", t, func() {
 		q, _ := Request(GET, "http://httpbin.org/get")
 		q.
 			Query(&queryParams).
 			Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
-			mocha.So(req.URL.String(), mocha.ShouldEqual, "http://httpbin.org/get?foo=bar&name=%E6%B4%BB%E5%8A%9B")
+			So(req.URL.String(), ShouldEqual, "http://httpbin.org/get?foo=bar&name=%E6%B4%BB%E5%8A%9B")
 		})
 	})
 
-	mocha.Convey("Parameters, ContentLength should equal to buffer length", t, func() {
+	Convey("Parameters, ContentLength should equal to buffer length", t, func() {
 		q, _ := Request(POST, "http://httpbin.org/post")
 		q.
 			Parameters(queryParams).
 			Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
-			mocha.So(res.ContentLength, mocha.ShouldEqual, int64(data.Len()))
+			So(res.ContentLength, ShouldEqual, int64(data.Len()))
 		})
 	})
 
@@ -56,21 +56,21 @@ func TestResponseHandling(t *testing.T) {
 		Origin string
 	}
 
-	mocha.Convey("Response JSON", t, func() {
+	Convey("Response JSON", t, func() {
 		q, _ := Request(POST, "http://httpbin.org/post")
 		q.
 			Encoding("JSON").
 			Parameters(parameters).
 			ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct, e error) {
-			mocha.Convey("Data - a pointer struct", func() {
-				mocha.So(data, mocha.ShouldPointTo, data)
-				mocha.So(data.Headers["Host"], mocha.ShouldEqual, "httpbin.org")
+			Convey("Data - a pointer struct", func() {
+				So(data, ShouldPointTo, data)
+				So(data.Headers["Host"], ShouldEqual, "httpbin.org")
 			})
 		}).
 			ResponseJSON(func(req *http.Request, res *http.Response, data DataStruct2, e error) {
-			mocha.Convey("Data - a struct", func() {
-				mocha.So(&data, mocha.ShouldNotPointTo, &DataStruct2{})
-				mocha.So(data.Origin, mocha.ShouldNotBeNil)
+			Convey("Data - a struct", func() {
+				So(&data, ShouldNotPointTo, &DataStruct2{})
+				So(data.Origin, ShouldNotBeNil)
 			})
 		}).
 			// Nothing happend
@@ -98,24 +98,24 @@ func TestResponseHandling(t *testing.T) {
 		Json    PostParameters `json:"json,omitempty"`
 	}
 
-	mocha.Convey("Response JSON, using JSON decode", t, func() {
+	Convey("Response JSON, using JSON decode", t, func() {
 		q, _ := Request(POST, "http://httpbin.org/post")
 		q.
 			Encoding("JSON").
 			Parameters(parameters2).
 			ResponseJSON(func(req *http.Request, res *http.Response, data DataStruct4, e error) {
-			mocha.Convey("Using DataStruct4 JSON struct", func() {
-				mocha.So(data.Origin, mocha.ShouldNotBeNil)
+			Convey("Using DataStruct4 JSON struct", func() {
+				So(data.Origin, ShouldNotBeNil)
 			})
 		}).
 			ResponseJSON(func(req *http.Request, res *http.Response, data *DataStruct3, e error) {
-			mocha.Convey("Using DataStruct3 JSON struct", func() {
-				mocha.So(&data.Json, mocha.ShouldResemble, parameters2)
+			Convey("Using DataStruct3 JSON struct", func() {
+				So(&data.Json, ShouldResemble, parameters2)
 			})
 		})
 	})
 
-	mocha.Convey("Encoding Query Options", t, func() {
+	Convey("Encoding Query Options", t, func() {
 		type Options struct {
 			Foo string `url:"foo"`
 			Baz []int  `url:"baz"`
@@ -126,7 +126,7 @@ func TestResponseHandling(t *testing.T) {
 		q.
 			Query(Options{"bar", []int{233, 377, 610}}).
 			Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
-			mocha.So(req.URL.String(), mocha.ShouldEqual, "http://httpbin.org/get?baz=233&baz=377&baz=610&foo=bar")
+			So(req.URL.String(), ShouldEqual, "http://httpbin.org/get?baz=233&baz=377&baz=610&foo=bar")
 		})
 	})
 }
@@ -134,16 +134,16 @@ func TestResponseHandling(t *testing.T) {
 func TestDownload(t *testing.T) {
 	os.Mkdir("tmp", os.ModePerm)
 
-	mocha.Convey("Downloading file", t, func() {
-		mocha.Convey("Downloading stream.log in progress\n", func() {
+	Convey("Downloading file", t, func() {
+		Convey("Downloading stream.log in progress\n", func() {
 			q, _ := Download(GET, "http://httpbin.org/bytes/1024", "tmp/stream.log")
 			q.
 				Progress(func(c, t, e int64) {
 				log.Println(c, t, e)
-				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
+				So(c, ShouldBeLessThanOrEqualTo, t)
 			}).Do()
 		})
-		mocha.Convey("Downloading stream2.log in progress and invoke response handler\n", func() {
+		Convey("Downloading stream2.log in progress and invoke response handler\n", func() {
 			var n int64
 			stream2, _ := os.Create("tmp/stream2.log")
 			q, _ := Download(GET, "http://httpbin.org/bytes/10240", stream2)
@@ -151,18 +151,18 @@ func TestDownload(t *testing.T) {
 				Progress(func(c, t, e int64) {
 				n = c
 				log.Println(c, t, e)
-				mocha.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
+				So(c, ShouldBeLessThanOrEqualTo, t)
 			}).Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
 				l := int64(data.Len())
-				mocha.So(n, mocha.ShouldEqual, l)
-				mocha.So(res.ContentLength, mocha.ShouldEqual, l)
+				So(n, ShouldEqual, l)
+				So(res.ContentLength, ShouldEqual, l)
 			})
 		})
 	})
 }
 
 func TestUpload(t *testing.T) {
-	mocha.Convey("Uploading file", t, func(m mocha.C) {
+	Convey("Uploading file", t, func(m C) {
 		m.Convey("Uploading one file\n", func() {
 			data := map[string]interface{}{
 				"stream": "tmp/stream.log",
@@ -171,10 +171,10 @@ func TestUpload(t *testing.T) {
 			q.
 				Progress(func(c, t, e int64) {
 				log.Println(c, t, e)
-				m.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
+				m.So(c, ShouldBeLessThanOrEqualTo, t)
 			}).Do()
 		})
-		mocha.Convey("Uploading multi files\n", func() {
+		Convey("Uploading multi files\n", func() {
 			stream2, _ := os.Open("quest_test.go")
 			stream3 := bytes.NewBufferString(`Hello Quest!`)
 			data := map[string]interface{}{
@@ -188,10 +188,10 @@ func TestUpload(t *testing.T) {
 				Parameters(map[string]string{"foo": "bar", "bar": "foo"}).
 				Progress(func(c, t, e int64) {
 				log.Println(c, t, e)
-				m.So(c, mocha.ShouldBeLessThanOrEqualTo, t)
+				m.So(c, ShouldBeLessThanOrEqualTo, t)
 			}).Response(func(req *http.Request, res *http.Response, data *bytes.Buffer, err error) {
 				l := int64(data.Len())
-				m.So(res.ContentLength, mocha.ShouldEqual, l)
+				m.So(res.ContentLength, ShouldEqual, l)
 			})
 		})
 	})
@@ -206,26 +206,26 @@ func TestAuthenticate(t *testing.T) {
 	user := "user"
 	passwd := "password"
 
-	mocha.Convey("Authenticate", t, func() {
-		mocha.Convey("Basic Auth", func() {
+	Convey("Authenticate", t, func() {
+		Convey("Basic Auth", func() {
 			q, _ := Request(GET, "https://httpbin.org/basic-auth/"+user+"/"+passwd)
 			q.Authenticate(user, passwd).
 				ResponseJSON(func(_ *http.Request, _ *http.Response, data Auth, _ error) {
-				mocha.So(data.User, mocha.ShouldEqual, user)
-				mocha.So(data.Authenticated, mocha.ShouldEqual, true)
+				So(data.User, ShouldEqual, user)
+				So(data.Authenticated, ShouldEqual, true)
 			}).Do()
 		})
 	})
 }
 
 func TestTimeout(t *testing.T) {
-	mocha.Convey("Timeout", t, func() {
-		mocha.Convey("It's timeout.", func() {
+	Convey("Timeout", t, func() {
+		Convey("It's timeout.", func() {
 			s := time.Duration(3 * time.Second)
 			q, _ := Request(GET, "https://httpbin.org/delay/5")
 			q.Timeout(s).Do()
 		})
-		mocha.Convey("It's not timeout.", func() {
+		Convey("It's not timeout.", func() {
 			s := time.Duration(30 * time.Second)
 			q, _ := Request(GET, "https://httpbin.org/delay/5")
 			q.Timeout(s).Do()

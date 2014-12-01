@@ -42,7 +42,3 @@ func Download(method Method, endpoint string, destination interface{}) (r *Reque
 	r.Destination(destination)
 	return
 }
-
-func Println() {}
-
-func DebugPrintln() {}

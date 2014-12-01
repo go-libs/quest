@@ -377,6 +377,19 @@ func (r *Requester) Cancel() {
 	}
 }
 
+func (r *Requester) Println() string {
+	s := []string{r.Method.String(), r.Url.String()}
+
+	if r.res != nil {
+		s = append(s, strconv.Itoa(r.res.StatusCode))
+	}
+
+	return strings.Join(s, " ")
+}
+
+func (r *Requester) DebugPrintln() {
+}
+
 func (r *Requester) Pipe() {
 }
 
