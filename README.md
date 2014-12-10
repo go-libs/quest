@@ -17,6 +17,7 @@
 - [x] Authentication
 - [x] Timeout, defaults to 30 * time.Second
 - [x] cURL Debug Output
+- [ ] TSL config
 - [ ] Pipe Stream to other request
 - [ ] Download Resume data
 - [ ] More Errors Output
@@ -291,6 +292,23 @@ q, _ := Request(GET, "http://httpbin.org/cookies")
 q.Query(&queryParams)
 q.Cookie(c)
 log.Println(q.DebugPrintln())
+```
+
+
+### Response `Bytes()`, `String()`, `JSON(v interface{})`
+
+```go
+q, _ := Request(GET, "http://httpbin.org/get")
+b1, err := q.Bytes()
+s1, err := q.String()
+
+type DataStruct struct {
+  Headers map[string]string
+  Origin  string
+}
+
+v := DataStruct{}
+err := q.JSON(&v)
 ```
 
 

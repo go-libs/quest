@@ -232,3 +232,37 @@ func TestTimeout(t *testing.T) {
 		})
 	})
 }
+
+func TestBytesNotHandler(t *testing.T) {
+	queryParams := url.Values{}
+	queryParams.Set("foo", "bar")
+	queryParams.Set("name", "活力")
+
+	Convey("Response Bytes not handler", t, func() {
+		q, _ := Request(GET, "http://httpbin.org/get")
+		_, err := q.Query(&queryParams).Bytes()
+		So(err, ShouldBeNil)
+	})
+}
+
+func TestStringNotHandler(t *testing.T) {
+	Convey("Response String not handler", t, func() {
+		q, _ := Request(GET, "http://httpbin.org/get")
+		_, err := q.String()
+		So(err, ShouldBeNil)
+	})
+}
+
+func TestJSONNotHandler(t *testing.T) {
+	type DataStruct struct {
+		Headers map[string]string
+		Origin  string
+	}
+	Convey("Response JSON not handler", t, func() {
+		q, _ := Request(GET, "http://httpbin.org/get")
+		b := DataStruct{}
+		err := q.JSON(&b)
+		So(err, ShouldBeNil)
+		So(b.Headers["Host"], ShouldEqual, "httpbin.org")
+	})
+}

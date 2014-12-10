@@ -262,6 +262,25 @@ func (r *Requester) ResponseJSON(f interface{}) *Requester {
 	return r
 }
 
+func (r *Requester) Bytes() ([]byte, error) {
+	_, err := r.response()
+	return r.Buffer.Bytes(), err
+}
+
+func (r *Requester) String() (string, error) {
+	_, err := r.response()
+	return r.Buffer.String(), err
+}
+
+func (r *Requester) JSON(v interface{}) (err error) {
+	_, err = r.response()
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(r.Buffer.Bytes(), v)
+	return
+}
+
 func (r *Requester) Validate() *Requester {
 	return r
 }
