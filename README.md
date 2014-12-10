@@ -312,6 +312,15 @@ err := q.JSON(&v)
 ```
 
 
+### TLS client config `TLSConfig(*tls.Config)`
+
+```go
+t := &tls.Config{}
+q, _ := Request(GET, "http://httpbin.org/get")
+q.TLSConfig(t)
+```
+
+
 ## License
 
 MIT
