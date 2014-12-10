@@ -2,6 +2,7 @@ package quest
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"io"
@@ -71,6 +72,7 @@ type Requester struct {
 	pg *progress.Progress
 
 	transport *http.Transport
+	tlsconfig *tls.Config
 	timeout   time.Duration
 }
 
@@ -358,6 +360,9 @@ func (r *Requester) Do() (*bytes.Buffer, error) {
 	}
 
 	r.transport = new(http.Transport)
+	if r.tlsconfig != nil {
+		r.transport.TLSClientConfig = r.tlsconfig
+	}
 	r.client = &http.Client{Transport: r.transport, Timeout: r.timeout}
 	res, err := r.client.Do(r.req)
 	if err != nil {
@@ -402,6 +407,11 @@ func (r *Requester) Do() (*bytes.Buffer, error) {
 		return nil, err
 	}
 	return r.Buffer, nil
+}
+
+func (r *Requester) TLSConfig(t *tls.Config) *Requester {
+	r.tlsconfig = t
+	return r
 }
 
 func (r *Requester) Cancel() {

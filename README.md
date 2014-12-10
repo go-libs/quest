@@ -17,7 +17,7 @@
 - [x] Authentication
 - [x] Timeout, defaults to 30 * time.Second
 - [x] cURL Debug Output
-- [ ] TSL config
+- [x] TLS config
 - [ ] Pipe Stream to other request
 - [ ] Download Resume data
 - [ ] More Errors Output
