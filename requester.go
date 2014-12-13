@@ -441,6 +441,16 @@ func (r *Requester) DebugPrintln() string {
 		s = append(s, "-u "+r.Url.User.String())
 	}
 
+	if r.tlsconfig != nil {
+		if r.tlsconfig.InsecureSkipVerify {
+			s = append(s, "-k")
+		} else if r.tlsconfig.RootCAs != nil {
+			s = append(s, "--cacert ca.pem")
+		}
+		s = append(s, "--cert cert.pem")
+		s = append(s, "--key key.pem")
+	}
+
 	if len(r.cookies) > 0 {
 		var cs []string
 		for _, c := range r.cookies {
