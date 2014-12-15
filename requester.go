@@ -91,6 +91,11 @@ func (r *Requester) Timeout(t time.Duration) *Requester {
 	return r
 }
 
+func (r *Requester) Set(key, value string) *Requester {
+	r.Header.Set(key, value)
+	return r
+}
+
 func (r *Requester) Query(data interface{}) *Requester {
 	qs, err := QueryString(data)
 	r.err = err
