@@ -233,6 +233,19 @@ func TestTimeout(t *testing.T) {
 	})
 }
 
+func TestSetHeader(t *testing.T) {
+	type DataStruct struct {
+		Headers map[string]string
+	}
+	Convey("set header", t, func() {
+		q, _ := Request("GET", "http://httpbin.org/headers")
+		q.Set("Quest", "Test").
+			ResponseJSON(func(_ *http.Request, _ *http.Response, data DataStruct, _ error) {
+			So(data.Headers["Quest"], ShouldEqual, "Test")
+		}).Do()
+	})
+}
+
 func TestBytesNotHandler(t *testing.T) {
 	queryParams := url.Values{}
 	queryParams.Set("foo", "bar")
