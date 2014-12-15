@@ -2,10 +2,12 @@ package quest
 
 import (
 	"bytes"
+	"encoding/base64"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -233,6 +235,35 @@ func TestTimeout(t *testing.T) {
 	})
 }
 
+func TestSetHeader(t *testing.T) {
+	type DataStruct struct {
+		Headers map[string]string
+	}
+	Convey("set header", t, func() {
+		q, _ := Request(GET, "http://httpbin.org/headers")
+		q.Set("Quest", "Test").
+			ResponseJSON(func(_ *http.Request, _ *http.Response, data DataStruct, _ error) {
+			So(data.Headers["Quest"], ShouldEqual, "Test")
+		}).Do()
+	})
+}
+
+func TestBasicAuth(t *testing.T) {
+	type DataStruct struct {
+		Headers map[string]string
+	}
+	Convey("set header", t, func() {
+		q, _ := Request(GET, "http://httpbin.org/headers")
+		q.BasicAuth("test", "1234").
+			ResponseJSON(func(_ *http.Request, _ *http.Response, data DataStruct, _ error) {
+			username, password, ok := parseBasicAuth(data.Headers["Authorization"])
+			So(username, ShouldEqual, "test")
+			So(password, ShouldEqual, "1234")
+			So(ok, ShouldEqual, true)
+		}).Do()
+	})
+}
+
 func TestBytesNotHandler(t *testing.T) {
 	queryParams := url.Values{}
 	queryParams.Set("foo", "bar")
@@ -265,4 +296,20 @@ func TestJSONNotHandler(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(b.Headers["Host"], ShouldEqual, "httpbin.org")
 	})
+}
+
+func parseBasicAuth(auth string) (username, password string, ok bool) {
+	if !strings.HasPrefix(auth, "Basic ") {
+		return
+	}
+	c, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(auth, "Basic "))
+	if err != nil {
+		return
+	}
+	cs := string(c)
+	s := strings.IndexByte(cs, ':')
+	if s < 0 {
+		return
+	}
+	return cs[:s], cs[s+1:], true
 }
