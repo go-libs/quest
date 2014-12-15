@@ -9,7 +9,9 @@ import (
 	"io/ioutil"
 	"log"
 	"mime/multipart"
+	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -39,6 +41,9 @@ type Requester struct {
 
 	// HTTP client
 	client *http.Client
+
+	// Other client, unix
+	clientConn *httputil.ClientConn
 
 	// HTTP request
 	req *http.Request
@@ -364,15 +369,35 @@ func (r *Requester) Do() (*bytes.Buffer, error) {
 		}
 	}
 
-	r.transport = new(http.Transport)
-	if r.tlsconfig != nil {
-		r.transport.TLSClientConfig = r.tlsconfig
+	var (
+		res *http.Response
+		err error
+	)
+
+	switch r.Url.Scheme {
+	case "http", "https":
+		r.transport = new(http.Transport)
+		if r.tlsconfig != nil {
+			r.transport.TLSClientConfig = r.tlsconfig
+		}
+		r.client = &http.Client{Transport: r.transport, Timeout: r.timeout}
+		res, err = r.client.Do(r.req)
+		if err != nil {
+			return nil, err
+		}
+		break
+	default:
+		conn, err := net.Dial(r.Url.Scheme, r.Url.Host)
+		if err != nil {
+			return nil, err
+		}
+		r.clientConn = httputil.NewClientConn(conn, nil)
+		res, err = r.clientConn.Do(r.req)
+		if err != nil {
+			return nil, err
+		}
 	}
-	r.client = &http.Client{Transport: r.transport, Timeout: r.timeout}
-	res, err := r.client.Do(r.req)
-	if err != nil {
-		return nil, err
-	}
+
 	defer res.Body.Close()
 
 	r.res = res
@@ -422,6 +447,8 @@ func (r *Requester) TLSConfig(t *tls.Config) *Requester {
 func (r *Requester) Cancel() {
 	if r.client != nil {
 		r.client.Transport.(*http.Transport).CancelRequest(r.req)
+	} else if r.clientConn != nil {
+		r.clientConn.Close()
 	}
 }
 
