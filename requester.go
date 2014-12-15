@@ -3,6 +3,7 @@ package quest
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io"
@@ -88,6 +89,16 @@ func (r *Requester) Destination(destination interface{}) *Requester {
 
 func (r *Requester) Timeout(t time.Duration) *Requester {
 	r.timeout = t
+	return r
+}
+
+func (r *Requester) Set(key, value string) *Requester {
+	r.Header.Set(key, value)
+	return r
+}
+
+func (r *Requester) BasicAuth(username, password string) *Requester {
+	r.Header.Set("Authorization", "Basic "+basicAuth(username, password))
 	return r
 }
 
@@ -483,4 +494,9 @@ func encodesParametersInURL(method Method) bool {
 		return true
 	}
 	return false
+}
+
+func basicAuth(username, password string) string {
+	auth := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
