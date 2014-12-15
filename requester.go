@@ -387,6 +387,7 @@ func (r *Requester) Do() (*bytes.Buffer, error) {
 		}
 		break
 	default:
+		// TODO @fundon, customzie
 		conn, err := net.Dial(r.Url.Scheme, r.Url.Host)
 		if err != nil {
 			return nil, err
