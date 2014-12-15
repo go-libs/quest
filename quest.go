@@ -3,16 +3,17 @@ package quest
 import (
 	"net/http"
 	stdurl "net/url"
+	"strings"
 )
 
 // base request client
-func Request(method Method, endpoint string) (r *Requester, err error) {
+func Request(method, endpoint string) (r *Requester, err error) {
 	url, err := stdurl.ParseRequestURI(endpoint)
 	if err != nil {
 		return nil, err
 	}
 	r = &Requester{
-		Method:   method,
+		Method:   strings.ToUpper(method),
 		Endpoint: endpoint,
 		Url:      url,
 		Header:   make(http.Header),
@@ -22,7 +23,7 @@ func Request(method Method, endpoint string) (r *Requester, err error) {
 }
 
 // upload file / data / stream
-func Upload(method Method, endpoint string, files map[string]interface{}) (r *Requester, err error) {
+func Upload(method, endpoint string, files map[string]interface{}) (r *Requester, err error) {
 	r, err = Request(method, endpoint)
 	if err != nil {
 		return
@@ -33,7 +34,7 @@ func Upload(method Method, endpoint string, files map[string]interface{}) (r *Re
 }
 
 // download file / data / stream to file
-func Download(method Method, endpoint string, destination interface{}) (r *Requester, err error) {
+func Download(method, endpoint string, destination interface{}) (r *Requester, err error) {
 	r, err = Request(method, endpoint)
 	if err != nil {
 		return

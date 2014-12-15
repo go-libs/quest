@@ -35,7 +35,7 @@
 ```go
 import "github.com/go-libs/quest"
 
-q, err := quest.Request(quest.GET, "http://httpbin.org/get")
+q, err := quest.Request("GET", "http://httpbin.org/get")
 ```
 
 

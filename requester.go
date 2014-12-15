@@ -31,7 +31,7 @@ type StringHandlerFunc func(*http.Request, *http.Response, string, error)
 // A Request manages communication with http service.
 type Requester struct {
 	// HTTP method
-	Method Method
+	Method string
 
 	// Base URL for Requests.
 	Endpoint string
@@ -323,7 +323,7 @@ func (r *Requester) ValidateStatusCode(statusCodes ...int) *Requester {
 func (r *Requester) Do() (*bytes.Buffer, error) {
 	// lazy create request
 	r.req = &http.Request{
-		Method: r.Method.String(),
+		Method: r.Method,
 		URL:    r.Url,
 		Header: r.Header,
 	}
@@ -421,7 +421,7 @@ func (r *Requester) Cancel() {
 }
 
 func (r *Requester) Println() string {
-	s := []string{r.Method.String(), r.Url.String()}
+	s := []string{r.Method, r.Url.String()}
 
 	if r.res != nil {
 		s = append(s, strconv.Itoa(r.res.StatusCode))
@@ -434,7 +434,7 @@ func (r *Requester) DebugPrintln() string {
 	s := []string{"$ curl -i"}
 
 	if r.Method != GET {
-		s = append(s, "-X "+r.Method.String())
+		s = append(s, "-X "+r.Method)
 	}
 
 	if r.Url.User != nil {
@@ -460,7 +460,7 @@ func (r *Requester) DebugPrintln() string {
 	}
 
 	for field, _ := range r.Header {
-		s = append(s, "-H "+field+": "+r.Header.Get(field))
+		s = append(s, "-H "+strconv.Quote(field+": "+r.Header.Get(field)))
 	}
 
 	if body, _, err := packBody(r.rawBody); err == nil && body != nil {
@@ -477,7 +477,7 @@ func (r *Requester) DebugPrintln() string {
 func (r *Requester) Pipe() {
 }
 
-func encodesParametersInURL(method Method) bool {
+func encodesParametersInURL(method string) bool {
 	switch method {
 	case GET, HEAD, DELETE:
 		return true

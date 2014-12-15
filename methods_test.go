@@ -8,7 +8,7 @@ import (
 
 func TestString(t *testing.T) {
 	mocha.Convey("Methods", t, func() {
-		mocha.So("OPTIONS", mocha.ShouldEqual, OPTIONS.String())
-		mocha.So("PUT", mocha.ShouldEqual, PUT.String())
+		mocha.So("OPTIONS", mocha.ShouldEqual, OPTIONS)
+		mocha.So("PUT", mocha.ShouldEqual, PUT)
 	})
 }
