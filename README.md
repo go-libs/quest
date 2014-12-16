@@ -18,6 +18,7 @@
 - [x] Timeout, defaults to 30 * time.Second
 - [x] cURL Debug Output
 - [x] TLS config
+- [x] Support Short APIS `Get`, `Post`, `Patch`, `Put`, `Delete`
 - [ ] Pipe Stream to other request
 - [ ] Download Resume data
 - [ ] More Errors Output
@@ -111,18 +112,16 @@ q.
 
 ### HTTP Methods
 
-```go
-const (
-	OPTIONS Method = iota
-	GET
-	HEAD
-	POST
-	PUT
-	PATCH
-	DELETE
-	TRACE
-	CONNECT
-)
+```
+OPTIONS
+GET
+HEAD
+POST
+PUT
+PATCH
+DELETE
+TRACE
+CONNECT
 ```
 
 
