@@ -321,6 +321,13 @@ q.TLSConfig(t)
 ```
 
 
+### `Get()` `Post()` `Put()` `Patch()` `Delete()` Short APIs
+
+```go
+q, _ = Get("http://httpbin.org/get")
+```
+
+
 ## License
 
 MIT
