@@ -246,6 +246,14 @@ func TestSetHeader(t *testing.T) {
 	})
 }
 
+func TestGzipResponse(t *testing.T) {
+	Convey("auto decompression gzip by net/http", t, func() {
+		q, _ := Request("GET", "http://httpbin.org/gzip")
+		s, _ := q.String()
+		So(s, ShouldContainSubstring, `"gzipped": true`)
+	})
+}
+
 func TestBytesNotHandler(t *testing.T) {
 	queryParams := url.Values{}
 	queryParams.Set("foo", "bar")
