@@ -119,6 +119,6 @@ func TestDelete(t *testing.T) {
 	Convey("Delete Request\n", t, func() {
 		q, _ := Put("http://httpbin.org/delete")
 		q.Do()
-		So(q.res.StatusCode, ShouldEqual, 200)
+		So(q.res.StatusCode, ShouldEqual, 405)
 	})
 }
