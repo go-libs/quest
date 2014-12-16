@@ -43,3 +43,28 @@ func Download(method, endpoint string, destination interface{}) (r *Requester, e
 	r.Destination(destination)
 	return
 }
+
+// Get Request
+func Get(endpoint string) (*Requester, error) {
+	return Request(GET, endpoint)
+}
+
+// Post Request
+func Post(endpoint string) (*Requester, error) {
+	return Request(POST, endpoint)
+}
+
+// Put Request
+func Put(endpoint string) (*Requester, error) {
+	return Request(PUT, endpoint)
+}
+
+// Patch Request
+func Patch(endpoint string) (*Requester, error) {
+	return Request(PATCH, endpoint)
+}
+
+// Delete Request
+func Delete(endpoint string) (*Requester, error) {
+	return Request(DELETE, endpoint)
+}
