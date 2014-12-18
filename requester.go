@@ -56,6 +56,8 @@ type Requester struct {
 	// HTTP response
 	res *http.Response
 
+	StatusCode int
+
 	// response body, buffer
 	isBodyClosed bool
 	Buffer       *bytes.Buffer
@@ -306,28 +308,24 @@ func (r *Requester) ValidateAcceptContentType(map[string]string) bool {
 	return true
 }
 
-func (r *Requester) validateStatusCode(statusCodes ...int) bool {
-	statusCode := r.res.StatusCode
+// Status Code
+func (r *Requester) ValidateStatusCode(statusCodes ...int) (b bool) {
+	r.response()
 	if len(statusCodes) > 0 {
 		for _, c := range statusCodes {
-			if statusCode == c {
-				return true
+			if b = r.StatusCode == c; b {
+				break
 			}
 		}
 		// 200 <= x < 300
-	} else if statusCode >= 200 && statusCode < 300 {
-		return true
+	} else if r.StatusCode >= 200 && r.StatusCode < 300 {
+		b = true
 	}
-	return false
-}
 
-// Status Code
-func (r *Requester) ValidateStatusCode(statusCodes ...int) *Requester {
-	r.response()
-	if !r.validateStatusCode(statusCodes...) {
-		r.err = errors.New("http: invalid status code " + strconv.Itoa(r.res.StatusCode))
+	if !b {
+		r.err = errors.New("http: invalid status code " + strconv.Itoa(r.StatusCode))
 	}
-	return r
+	return
 }
 
 func (r *Requester) Do() (*bytes.Buffer, error) {
@@ -402,6 +400,7 @@ func (r *Requester) Do() (*bytes.Buffer, error) {
 	defer res.Body.Close()
 
 	r.res = res
+	r.StatusCode = res.StatusCode
 	r.Buffer = new(bytes.Buffer)
 	dw := io.MultiWriter(r.Buffer)
 
@@ -457,7 +456,7 @@ func (r *Requester) Println() string {
 	s := []string{r.Method, r.Url.String()}
 
 	if r.res != nil {
-		s = append(s, strconv.Itoa(r.res.StatusCode))
+		s = append(s, strconv.Itoa(r.StatusCode))
 	}
 
 	return strings.Join(s, " ")
