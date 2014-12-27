@@ -295,19 +295,6 @@ func (r *Requester) JSON(v interface{}) (err error) {
 	return
 }
 
-func (r *Requester) Validate() *Requester {
-	return r
-}
-
-func (r *Requester) validateAcceptContentType(map[string]string) bool {
-	return true
-}
-
-// Acceptable Content Type
-func (r *Requester) ValidateAcceptContentType(map[string]string) bool {
-	return true
-}
-
 // Status Code
 func (r *Requester) ValidateStatusCode(statusCodes ...int) (b bool) {
 	r.response()
